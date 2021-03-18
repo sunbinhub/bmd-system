@@ -4,7 +4,7 @@
       <!-- 首页头部 -->
       <el-header class="index-header">
         <div class="fl bmdm-style bmdm-title">
-          <span>业务中台管理</span>
+          <span>业务中台管理balabalabala</span>
         </div>
         <div class="fr bmdm-style">
           <span>
