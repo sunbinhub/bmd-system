@@ -132,7 +132,7 @@
         <el-aside :style="getAsideHeight" class="index-aside">
           <el-menu
             router
-            default-active="PlatformRoleManagement"
+            :default-active="defaultActive"
             class="el-menu-vertical-demo index-menu"
             @open="handleOpen"
             @close="handleClose"
@@ -172,7 +172,8 @@ export default {
       getAsideHeight: {
         height: ""
       },
-      leftMenus: []
+      leftMenus: [],
+      defaultActive: "PlatformRoleManagement"
     };
   },
   // 生命周期 - 创建完成（可以访问当前this实例）
@@ -184,6 +185,12 @@ export default {
   // 生命周期 - 销毁完成
   destroyed() {
     window.removeEventListener("resize", this.getHeight);
+  },
+  watch: {
+    //监听路由的变化
+    $route() {
+      this.setCurrentRoute();
+    }
   },
   // 方法集合
   methods: {
@@ -197,6 +204,10 @@ export default {
     },
     handleClose(key, keyPath) {
       // console.log(key, keyPath);
+    },
+    setCurrentRoute() {
+      //监听到当前路由状态并激活当前菜单
+      this.defaultActive = this.$route.path.slice(1);
     }
   },
   computed: {

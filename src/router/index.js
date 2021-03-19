@@ -35,7 +35,7 @@ router.beforeEach((to, from, next) => {
         //目前是vue-router：3.0.1版本
         router.addRoutes(routes);
         hasMenus = true;
-        next("/");
+        next({ path: to.path || "/PlatformRoleManagement" });
       } catch (err) {
         // resetTokenAndClearUser();
         // next(`/login?redirect=${to.path}`);

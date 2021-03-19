@@ -117,20 +117,11 @@ function generateRoutes(children, item) {
       if (item.hasChildren) {
         generateRoutes(children, item);
       } else {
-        //将PlatformRoleManagement作为默认显示
-        if (item.path === "PlatformRoleManagement") {
-          children.push({
-            path: "/",
-            name: item.name,
-            component: () => import(`@/components/${item.path}`)
-          });
-        } else {
-          children.push({
-            path: item.path,
-            name: item.name,
-            component: () => import(`@/components/${item.path}`)
-          });
-        }
+        children.push({
+          path: item.path,
+          name: item.name,
+          component: () => import(`@/components/${item.path}`)
+        });
       }
     });
   }

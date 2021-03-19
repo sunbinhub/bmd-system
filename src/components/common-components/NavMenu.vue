@@ -16,7 +16,11 @@
         <NavMenu :navMenus="navItem.children"></NavMenu>
       </el-submenu>
       <!-- 如果没有子菜单，则显示当前内容 -->
-      <el-menu-item v-else :index="navItem.path" :key="navItem.id">
+      <el-menu-item
+        v-else
+        :index="navItem.path"
+        :key="navItem.id"
+      >
         <i :class="navItem.icon"></i>
         <span slot="title">{{ navItem.name }}</span>
       </el-menu-item>

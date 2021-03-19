@@ -123,7 +123,9 @@ export default {
                       // 跳转到后台首页
                       //思考：根据网友的经验，是我路由跳转和路由拦截的 path 冲突了
                       //解决：不影响操作，只需要把登陆按钮那里添加一个错误异常抛出就行即可: .catch(() => {})；
-                      _this.$router.push("/").catch(() => {});
+                      _this.$router
+                        .push("/PlatformRoleManagement")
+                        .catch(() => {});
                     }
                   });
               }
