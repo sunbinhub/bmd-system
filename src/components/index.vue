@@ -170,28 +170,33 @@ export default {
     // 这里存放数据
     return {
       getAsideHeight: {
+        //左侧导航的高度
         height: ""
       },
-      leftMenus: [],
-      defaultActive: "PlatformRoleManagement"
+      leftMenus: [], //左侧菜单数据
+      defaultActive: "PlatformRoleManagement" //当前激活菜单
     };
   },
-  // 生命周期 - 创建完成（可以访问当前this实例）
   created() {
+    //组件创建完成（可以访问当前this实例）
     window.addEventListener("resize", this.getHeight); // 注册监听器
     this.getHeight(); // 页面创建时先调用一次
     this.leftMenus = this.menuInfo; //导航菜单数据
+  },
+  mounted() {
+    //组件挂载完成，获取路由并赋值给当前激活菜单
+    this.defaultActive = this.$route.path.slice(1);
   },
   // 生命周期 - 销毁完成
   destroyed() {
     window.removeEventListener("resize", this.getHeight);
   },
-  watch: {
-    //监听路由的变化
-    $route() {
-      this.setCurrentRoute();
-    }
-  },
+  // watch: {
+  //   //监听路由的变化
+  //   $route() {
+  //     this.setCurrentRoute();
+  //   }
+  // },
   // 方法集合
   methods: {
     getHeight() {
@@ -204,11 +209,12 @@ export default {
     },
     handleClose(key, keyPath) {
       // console.log(key, keyPath);
-    },
-    setCurrentRoute() {
-      //监听到当前路由状态并激活当前菜单
-      this.defaultActive = this.$route.path.slice(1);
     }
+    // ,
+    // setCurrentRoute() {
+    //   //监听到当前路由状态并激活当前菜单
+    //   this.defaultActive = this.$route.path.slice(1);
+    // }
   },
   computed: {
     ...mapState({
