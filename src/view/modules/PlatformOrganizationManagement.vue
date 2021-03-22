@@ -48,7 +48,11 @@
               </el-select>
               <SearchInput @searchValue="searchOrganization"></SearchInput>
               <el-button type="info" size="mini">查询</el-button>
-              <el-button type="primary" @click="dialogFormVisible = true"  size="mini">
+              <el-button
+                type="primary"
+                @click="dialogFormVisible = true"
+                size="mini"
+              >
                 新增
               </el-button>
             </el-row>
@@ -149,7 +153,11 @@
                   size="mini"
                 ></el-input>
               </el-form-item>
-              <el-form-item label="组织全称" :label-width="formLabelWidth" size="mini">
+              <el-form-item
+                label="组织全称"
+                :label-width="formLabelWidth"
+                size="mini"
+              >
                 <el-input
                   v-model="organizationForm.organizationFullname"
                   placeholder="请输入内容"
@@ -210,7 +218,11 @@
                   </el-option>
                 </el-select>
               </el-form-item>
-              <el-form-item label="排序号" :label-width="formLabelWidth" size="mini">
+              <el-form-item
+                label="排序号"
+                :label-width="formLabelWidth"
+                size="mini"
+              >
                 <el-input
                   v-model="organizationForm.orderID"
                   placeholder="请输入内容"
@@ -240,7 +252,7 @@
   </el-container>
 </template>
 <script>
-import SearchInput from "./common-components/SearchInput";
+import SearchInput from "@/components/common-components/SearchInput";
 export default {
   components: { SearchInput },
   data() {
@@ -464,7 +476,7 @@ export default {
     },
     getPlatformAsideHeight() {
       // 获取浏览器高度，减去顶部导航栏的值70（可动态获取）
-      this.platformAsideHeight.height = window.innerHeight - 116 + "px";
+      this.platformAsideHeight.height = window.innerHeight - 172 + "px";
     },
     searchOrganization(value) {
       console.log(value);
@@ -474,7 +486,7 @@ export default {
     },
     getTableHeight() {
       // 获取浏览器高度，减去顶部导航栏的值70（可动态获取）
-      this.tableHeight = window.innerHeight - 267 + "px";
+      this.tableHeight = window.innerHeight - 323 + "px";
     },
     handleSizeChange(page_size) {
       console.log("pageSize改变时触发");

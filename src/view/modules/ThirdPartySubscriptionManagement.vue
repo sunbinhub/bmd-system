@@ -185,7 +185,7 @@
   </div>
 </template>
 <script>
-import SearchInput from "./common-components/SearchInput";
+import SearchInput from "@/components/common-components/SearchInput";
 export default {
   components: { SearchInput },
   data() {

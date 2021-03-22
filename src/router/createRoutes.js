@@ -99,7 +99,7 @@ export default function createRoutes(data) {
 
   result.push({
     path: "/",
-    component: () => import("../components/index.vue"),
+    component: () => import("@/view/index"),
     children
   });
 
@@ -108,6 +108,8 @@ export default function createRoutes(data) {
   });
   // 最后添加404页面 否则会在登陆成功后跳到404页面
   // result.push({ path: "*", redirect: "/404" });
+  //动态路由表存入sessionStorage
+  sessionStorage.setItem("dynamicMenuRoutes", JSON.stringify(children || "[]"));
   return result;
 }
 
@@ -120,7 +122,8 @@ function generateRoutes(children, item) {
         children.push({
           path: item.path,
           name: item.name,
-          component: () => import(`@/components/${item.path}`)
+          meta: { isTab: true, isDynamic: true },
+          component: () => import(`@/view/modules/${item.path}`)
         });
       }
     });

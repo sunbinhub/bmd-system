@@ -4,7 +4,7 @@
     <el-header
       style="border-bottom: 1px solid #ddd; padding:0; height:40px; line-height:40px;margin-bottom: 10px;"
     >
-      <span>平台机构管理</span>
+      <span>用户管理</span>
     </el-header>
     <!-- 头部结束 -->
     <!-- 主体部分开始 -->
@@ -492,7 +492,7 @@
   </el-container>
 </template>
 <script>
-import SearchInput from "./common-components/SearchInput";
+import SearchInput from "@/components/common-components/SearchInput";
 export default {
   components: { SearchInput },
   data() {
@@ -726,7 +726,7 @@ export default {
     },
     getPlatformAsideHeight() {
       // 获取浏览器高度，减去顶部导航栏的值70（可动态获取）
-      this.platformAsideHeight.height = window.innerHeight - 116 + "px";
+      this.platformAsideHeight.height = window.innerHeight - 172 + "px";
     },
     searchOrganization(value) {
       console.log(value);
@@ -736,7 +736,7 @@ export default {
     },
     getTableHeight() {
       // 获取浏览器高度，减去顶部导航栏的值70（可动态获取）
-      this.tableHeight = window.innerHeight - 267 + "px";
+      this.tableHeight = window.innerHeight - 323 + "px";
     },
     handleSizeChange(page_size) {
       console.log("pageSize改变时触发");

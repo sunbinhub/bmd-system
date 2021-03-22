@@ -22,7 +22,9 @@ const token1 = {
 // 状态
 const state = {
   Authorization: JSON.parse(localStorage.getItem("tokenInfo")), //token值
-  menuInfo: JSON.parse(localStorage.getItem("menuInfo")) //菜单信息
+  menuInfo: JSON.parse(localStorage.getItem("menuInfo")), //菜单信息
+  mainTabs: [], //顶层导航蓝标签页数据
+  mainTabsActiveName: "" //当前激活的顶层导航栏
   // userInfo: JSON.parse(localStorage.getItem("userInfo")),
   // userList: []
 };
@@ -34,9 +36,18 @@ const mutations = {
     localStorage.setItem("Authorization", JSON.stringify(tokenInfo));
     state.Authorization = tokenInfo;
   },
+  //保存用户数据
   SAVE_MENUINFO(state, menuInfo) {
     localStorage.setItem("menuInfo", JSON.stringify(menuInfo));
     state.menuInfo = menuInfo;
+  },
+  //保存顶层导航蓝标签页数据
+  updateMainTabs(state, tabs) {
+    state.mainTabs = tabs;
+  },
+  //保存当前激活的顶层导航栏
+  updateMainTabsActiveName(state, name) {
+    state.mainTabsActiveName = name;
   }
   // 保存用户数据
   // SAVE_USERINFO(state, userInfo) {

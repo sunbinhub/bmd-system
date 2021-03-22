@@ -4,7 +4,7 @@
     <el-header
       style="border-bottom: 1px solid #ddd; padding:0; height:40px; line-height:40px;margin-bottom: 10px;"
     >
-      <span>平台角色管理</span>
+      <span>角色管理</span>
     </el-header>
     <!-- 头部结束 -->
     <el-container>
@@ -86,7 +86,7 @@
             </template>
           </el-table-column>
         </el-table>
-        <div class="page">
+        <div>
           <el-pagination
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
@@ -177,11 +177,11 @@
                 </el-form>
               </div>
               <div v-show="dialogId === 2 ? true : false">
-                <el-col :span="5" style="border: 1px solid #ddd;height:400px; ">
+                <el-col :span="5" style="border: 1px solid #ddd;height:400px;">
                   <div style="border-bottom: 1px solid #ccc; padding: 5px;">
                     <el-input
                       placeholder="输入关键字进行过滤"
-                      v-model="filterText"
+                      v-model="organizationFilterText"
                       size="mini"
                     >
                     </el-input>
@@ -189,9 +189,10 @@
                   <el-tree
                     class="filter-tree"
                     :data="organizationData"
-                    :props="defaultProps"
-                    :filter-node-method="filterNode"
-                    ref="tree"
+                    :props="organizationDefaultProps"
+                    :filter-node-method="organizationFilterNode"
+                    highlight-current
+                    ref="organizationTree"
                     node-key="id"
                   >
                     <span class="custom-tree-node" slot-scope="{ node, data }">
@@ -203,45 +204,155 @@
                   </el-tree>
                 </el-col>
                 <el-col :span="1">&nbsp;</el-col>
-                <el-col :span="18" style="border:1px solid #ccc;">
-                  <div class="block">
-                    <el-tree
-                      :data="applicationData"
-                      show-checkbox
-                      node-key="id"
-                      default-expand-all
-                      :expand-on-click-node="false"
+                <el-col :span="18" style="border: 1px solid #ddd;height:400px;">
+                  <div style="border-bottom: 1px solid #ccc; padding: 5px;">
+                    <el-input
+                      placeholder="输入关键字进行过滤"
+                      v-model="applicationPermissionFilterText"
+                      size="mini"
                     >
-                      <span
-                        class="custom-tree-node"
-                        slot-scope="{ node, data }"
-                      >
-                        <span>
-                          <!-- <i :class="data.icon"></i> -->
-                          {{ node.label }}
-                        </span>
-                        <span>
-                          <el-button
-                            type="text"
-                            size="mini"
-                            @click="() => append(data)"
-                          >
-                            Append
-                          </el-button>
-                          <el-button
-                            type="text"
-                            size="mini"
-                            @click="() => remove(node, data)"
-                          >
-                            Delete
-                          </el-button>
-                        </span>
-                      </span>
-                    </el-tree>
+                    </el-input>
                   </div>
+                  <el-tree
+                    :data="applicationPermissionData"
+                    show-checkbox
+                    node-key="id"
+                    ref="applicationPermissionTree"
+                    highlight-current
+                    :props="applicationPermissionDefaultProps"
+                    :filter-node-method="applicationPermissionFilterNode"
+                  >
+                  </el-tree>
                 </el-col>
               </div>
-              <div v-show="dialogId === 3 ? true : false"></div>
+              <div v-show="dialogId === 3 ? true : false">
+                <el-container>
+                  <el-header style="height: 10px;font-weight:700;"
+                    >选择策略</el-header
+                  >
+                  <el-main>
+                    <template>
+                      <el-radio v-model="tactic" label="1">不设策略</el-radio>
+                      <el-radio v-model="tactic" label="2">添加策略</el-radio>
+                    </template>
+                    <div style="height:333px;">
+                      <div v-show="tactic === '2'" style="margin-top:10px;">
+                        <template>
+                          <el-row
+                            style="border: 1px solid #ccc;background: #eee;padding:0 5px;height:30px;"
+                          >
+                            <span class="fl" style="line-height:28px;">
+                              选中策略
+                            </span>
+                            <div class="fr">
+                              <el-button
+                                type="text"
+                                @click="addTactic"
+                                style="padding:0; padding-top:6px;"
+                              >
+                                新增策略
+                              </el-button>
+                              <el-button
+                                type="text"
+                                @click="removeTactic"
+                                style="padding:0;padding-top:6px;"
+                              >
+                                删除策略
+                              </el-button>
+                            </div>
+                          </el-row>
+                          <el-table
+                            ref="multipleTable"
+                            :data="organizationTableData"
+                            tooltip-effect="dark"
+                            style="width: 100%"
+                            @selection-change="handleSelectionChange"
+                            height="260px"
+                            border
+                            size="mini"
+                          >
+                            <el-table-column type="selection" width="55">
+                            </el-table-column>
+                            <el-table-column
+                              prop="name"
+                              label="序号"
+                              align="center"
+                              width="100"
+                              sortable
+                            ></el-table-column>
+                            <el-table-column label="日期" width="120">
+                              <template slot-scope="scope">{{
+                                scope.row.date
+                              }}</template>
+                            </el-table-column>
+                            <el-table-column
+                              prop="name"
+                              label="姓名"
+                              width="120"
+                            >
+                            </el-table-column>
+                            <el-table-column
+                              prop="address"
+                              label="地址"
+                              show-overflow-tooltip
+                            >
+                            </el-table-column>
+                            <el-table-column label="操作" width="130">
+                              <template slot-scope="scope">
+                                <el-button
+                                  @click="setValueClick(scope.row)"
+                                  type="text"
+                                  size="small"
+                                >
+                                  值设置
+                                </el-button>
+                                <el-button
+                                  @click="removeClick(scope.row)"
+                                  type="text"
+                                  size="small"
+                                >
+                                  删除
+                                </el-button>
+                              </template>
+                            </el-table-column>
+                          </el-table>
+                          <div>
+                            <el-pagination
+                              @size-change="handleSizeChange"
+                              @current-change="handleCurrentChange"
+                              :current-page="paginations.page_index"
+                              :page-sizes="paginations.page_sizes"
+                              :page-size="paginations.page_size"
+                              :layout="paginations.layout"
+                              :total="paginations.total"
+                              :pager-count="paginations.pager_count"
+                            >
+                            </el-pagination>
+                          </div>
+                        </template>
+                      </div>
+                    </div>
+                    <template>
+                      <el-button
+                        style="margin-top: 12px;"
+                        @click="last()"
+                        size="mini"
+                      >
+                        上一步
+                      </el-button>
+                      <el-button
+                        type="primary"
+                        style="margin-top: 12px;"
+                        @click="next()"
+                        size="mini"
+                      >
+                        下一步
+                      </el-button>
+                    </template>
+                  </el-main>
+                </el-container>
+                
+              </div>
             </el-main>
           </el-container>
         </el-container>
@@ -252,7 +363,7 @@
 </template>
 
 <script>
-import SearchInput from "./common-components/SearchInput";
+import SearchInput from "@/components/common-components/SearchInput";
 export default {
   data() {
     return {
@@ -323,13 +434,13 @@ export default {
         pager_count: 7 //页码按钮的数量，当总页数超过该值时会折叠
       },
       allTableData: [],
-      tableHeight: "",
+      tableHeight: "", //最外层表格高度
       handleOptions: "", //表格操作列
 
       //弹窗数据
       dialogFormVisible: false, //弹窗是否显示
       active: 0, //步骤条
-      dialogId: 2, //弹窗内默认显示内容
+      dialogId: 3, //弹窗内默认显示内容
       platformRoleForm: {
         platformRoleCode: "", //角色代码
         platformRoleName: "", //角色名称
@@ -350,9 +461,9 @@ export default {
         ]
       },
 
-      //树形控件
-      filterText: "",
-      //树形结构数据
+      //应用树形结构搜索
+      organizationFilterText: "",
+      //应用树形结构数据
       organizationData: [
         {
           id: 1,
@@ -413,13 +524,16 @@ export default {
           ]
         }
       ],
-      //树形结构默认树形
-      defaultProps: {
+      //应用树形结构默认树形
+      organizationDefaultProps: {
         children: "children",
         label: "label"
       },
-      //右侧树形结构
-      applicationData: [
+
+      //权限树形结构搜索
+      applicationPermissionFilterText: "",
+      //权限树形结构数据
+      applicationPermissionData: [
         {
           id: 1,
           label: "一级 1",
@@ -468,8 +582,65 @@ export default {
             }
           ]
         }
-      ]
-      // applicationData: JSON.parse(JSON.stringify(adhibitionData)),
+      ],
+      //权限树形结构默认树形
+      applicationPermissionDefaultProps: {
+        children: "children",
+        label: "label"
+      },
+      //策略选择
+      tactic: "2",
+      //组织表格数据
+      organizationTableData: [
+        {
+          date: "2016-05-03",
+          name: "王小虎",
+          address: "上海市普陀区金沙江路 1518 弄"
+        },
+        {
+          date: "2016-05-02",
+          name: "王小虎",
+          address: "上海市普陀区金沙江路 1518 弄"
+        },
+        {
+          date: "2016-05-04",
+          name: "王小虎",
+          address: "上海市普陀区金沙江路 1518 弄"
+        },
+        {
+          date: "2016-05-01",
+          name: "王小虎",
+          address: "上海市普陀区金沙江路 1518 弄"
+        },
+        {
+          date: "2016-05-08",
+          name: "王小虎",
+          address: "上海市普陀区金沙江路 1518 弄"
+        },
+        {
+          date: "2016-05-06",
+          name: "王小虎",
+          address: "上海市普陀区金沙江路 1518 弄"
+        },
+        {
+          date: "2016-05-07",
+          name: "王小虎",
+          address: "上海市普陀区金沙江路 1518 弄"
+        }
+      ],
+      //选中的表格数据
+      multipleSelection: [],
+      paginations: {
+        page_index: 1, //当前页
+        total: 15, //总数
+        page_size: 1, //一页显示多少条数据
+        page_sizes: [1, 10, 15, 20], //下拉框：每页显示多少条
+        layout: "total, sizes, prev, pager, next, jumper", //组件布局，子组件名用逗号分隔
+        pager_count: 7 //页码按钮的数量，当总页数超过该值时会折叠
+      },
+      allTableData: [], //实际展示的表格数据
+      dialogFormVisible: false, //弹窗是否显示
+      formLabelWidth: "120px" //弹窗内部左侧的距离
     };
   },
   components: { SearchInput },
@@ -482,8 +653,12 @@ export default {
   },
   watch: {
     //树形结构搜索方法
-    filterText(val) {
-      this.$refs.tree.filter(val);
+    organizationFilterText(val) {
+      this.$refs.organizationTree.filter(val);
+    },
+    //树形结构搜索方法
+    applicationPermissionFilterText(val) {
+      this.$refs.applicationPermissionTree.filter(val);
     }
   },
   methods: {
@@ -493,7 +668,7 @@ export default {
     },
     getTableHeight() {
       // 获取浏览器高度，减去顶部导航栏的值70（可动态获取）
-      this.tableHeight = window.innerHeight - 235 + "px";
+      this.tableHeight = window.innerHeight - 264 + "px";
     },
     setPaginations() {
       //设置分页 显示数据
@@ -570,13 +745,36 @@ export default {
       }
     },
     //树形结构事件
-    filterNode(value, data) {
+    organizationFilterNode(value, organizationData) {
       if (!value) return true;
-      return data.label.indexOf(value) !== -1;
+      return organizationData.label.indexOf(value) !== -1;
     },
-    //表格搜索事件
-    searchAdhibitionName(value) {
-      console.log(value);
+    //树形结构事件
+    applicationPermissionFilterNode(value, applicationPermissionData) {
+      if (!value) return true;
+      return applicationPermissionData.label.indexOf(value) !== -1;
+    },
+    //策略表格事件
+    handleSelectionChange(val) {
+      this.multipleSelection = val;
+    },
+    //策略表格修改事件
+    setValueClick(row) {
+      this.dialogFormVisible = true;
+      console.log(row);
+      //...这一行的数据赋值
+    },
+    //策略表格删除事件
+    removeClick(row) {
+      //...删除接口
+    },
+    //策略表格头部新增策略
+    addTactic() {
+      //...
+    },
+    //策略表格头部删除策略
+    removeTactic() {
+      //...
     }
   }
 };
@@ -609,5 +807,13 @@ export default {
   justify-content: space-between;
   font-size: 14px;
   padding-right: 8px;
+}
+
+.fl {
+  float: left;
+}
+
+.fr {
+  float: right;
 }
 </style>
