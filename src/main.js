@@ -11,13 +11,15 @@ import store from "./vuex/store";
 
 //引入 axios
 import axios from "axios";
+
+//请求拦截
 // axios.interceptors.request.use(
 //   config => {
 //     // 判断是否存在token，如果存在的话，则每个http header都加上token
-//     let token = localStorage.getItem("Authorization");
+//     let token = sessionStorage.getItem("tokenInfo");
 //     console.log("token数据" + token);
-//     if (!config.headers.hasOwnProperty("Authorization") && token) {
-//       config.headers.Authorization = token;
+//     if (!config.headers.hasOwnProperty("tokenInfo") && token) {
+//       config.headers.tokenInfo = token;
 //     }
 //     return config;
 //   },
@@ -25,8 +27,11 @@ import axios from "axios";
 //     return Promise.reject(error);
 //   }
 // );
+
+//post默认的头部信息Content-Type
 axios.defaults.headers.post["Content-Type"] =
   "application/x-www-form-urlencoded";
+  
 //挂载在Vue的原型上 小技巧
 Vue.prototype.axios = axios;
 import qs from "qs";

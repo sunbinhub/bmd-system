@@ -21,11 +21,11 @@ const token1 = {
 
 // 状态
 const state = {
-  Authorization: JSON.parse(localStorage.getItem("tokenInfo")), //token值
-  menuInfo: JSON.parse(localStorage.getItem("menuInfo")), //菜单信息
+  tokenInfo: JSON.parse(sessionStorage.getItem("tokenInfo")), //token值
+  menuInfo: JSON.parse(sessionStorage.getItem("menuInfo")), //菜单信息
+  userInfo: JSON.parse(sessionStorage.getItem("userInfo")), //用户信息
   mainTabs: [], //顶层导航蓝标签页数据
   mainTabsActiveName: "" //当前激活的顶层导航栏
-  // userInfo: JSON.parse(localStorage.getItem("userInfo")),
   // userList: []
 };
 
@@ -33,29 +33,30 @@ const state = {
 const mutations = {
   //保存token数据
   SAVE_TOKEN(state, tokenInfo) {
-    localStorage.setItem("Authorization", JSON.stringify(tokenInfo));
-    state.Authorization = tokenInfo;
+    sessionStorage.setItem("tokenInfo", JSON.stringify(tokenInfo));
+    state.tokenInfo = tokenInfo;
   },
-  //保存用户数据
+  //保存导航菜单数据
   SAVE_MENUINFO(state, menuInfo) {
-    localStorage.setItem("menuInfo", JSON.stringify(menuInfo));
+    sessionStorage.setItem("menuInfo", JSON.stringify(menuInfo));
     state.menuInfo = menuInfo;
   },
   //保存顶层导航蓝标签页数据
   updateMainTabs(state, tabs) {
     state.mainTabs = tabs;
   },
+  // 保存用户数据
+  SAVE_USERINFO(state, userInfo) {
+    // 先把数据存入本地存储
+    sessionStorage.setItem("userInfo", JSON.stringify(userInfo));
+    // 再更新数据
+    state.userInfo = userInfo;
+  },
   //保存当前激活的顶层导航栏
   updateMainTabsActiveName(state, name) {
     state.mainTabsActiveName = name;
   }
-  // 保存用户数据
-  // SAVE_USERINFO(state, userInfo) {
-  //   // 先把数据存入本地存储
-  //   localStorage.setItem("userInfo", JSON.stringify(userInfo));
-  //   // 再更新数据
-  //   state.userInfo = userInfo;
-  // },
+
   // 获取全局的用户数据
   // GET_USERLIST(state, userList) {
   //   state.userList = userList;

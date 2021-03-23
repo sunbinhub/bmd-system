@@ -29,7 +29,7 @@ router.beforeEach((to, from, next) => {
   // to: Route: 即将要进入的目标 路由对象
   // from: Route: 当前导航正要离开的路由对象
   //如果next为空则路由正常进行跳转，如果next不为空，则进行跳转时，会中断
-  if (localStorage.getItem("Authorization")) {
+  if (sessionStorage.getItem("tokenInfo")) {
     if (to.path === "/login") {
       next();
     } else if (hasMenus) {
@@ -44,8 +44,8 @@ router.beforeEach((to, from, next) => {
         hasMenus = true;
         next({ path: to.path || "/PlatformRoleManagement" });
       } catch (err) {
-        // resetTokenAndClearUser();
-        // next(`/login?redirect=${to.path}`);
+        sessionStorage.setItem("menuInfo", "[]");
+        next(`/login?redirect=${to.path}`);
       }
     }
   } else {

@@ -7,10 +7,26 @@
           <span>业务中台管理</span>
         </div>
         <div class="fr bmdm-style">
-          <span>
-            admin
-          </span>
+          <el-dropdown :show-timeout="0" placement="bottom">
+            <span class="el-dropdown-link">
+              {{ userInfo.username }}
+            </span>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item
+                @click.native="updatePasswordHandle()"
+                size="mini"
+              >
+                修改密码
+              </el-dropdown-item>
+              <el-dropdown-item @click.native="logoutHandle()" size="mini">
+                退出登录
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
         </div>
+        <!-- 弹窗, 修改密码 -->
+        <UpdatePassword v-if="updatePassowrdVisible" ref="updatePassowrd">
+        </UpdatePassword>
       </el-header>
       <el-container>
         <!--左侧动态菜单-->
@@ -65,9 +81,11 @@
 <script>
 import { mapState } from "vuex";
 import NavMenu from "./NavMenu";
+import clearLoginInfo from "@/router/logOff";
+import UpdatePassword from "./UpdatePassword";
 export default {
   // import引入的组件需要注入到对象中才能使用
-  components: { NavMenu },
+  components: { NavMenu, UpdatePassword },
   data() {
     // 这里存放数据
     return {
@@ -78,7 +96,8 @@ export default {
       leftMenus: [], //左侧菜单数据
       defaultActive: "PlatformRoleManagement", //当前激活菜单
       dynamicMenuRoutes: [], //动态路由表
-      mainTabs: [] //顶部导航标签页数据
+      mainTabs: [], //顶部导航标签页数据
+      updatePassowrdVisible: false //修改密码弹窗
     };
   },
   // 生命周期 - 销毁完成
@@ -103,12 +122,11 @@ export default {
     $route: ["routeHandle", "getPath"]
   },
   methods: {
+    // 获取浏览器高度，减去顶部导航栏的值66（可动态获取）
     getHeight() {
-      // 获取浏览器高度，减去顶部导航栏的值70（可动态获取）
       this.getAsideHeight.height = window.innerHeight - 66 + "px";
-      // console.log("高度：" + this.getAsideHeight.height);
     },
-    // tabs, 选中tab
+    // 顶部导航标签页：选中tab
     selectedTabHandle(tab) {
       tab = this.mainTabs.filter(item => item.path === tab.name);
       if (tab.length >= 1) {
@@ -117,7 +135,7 @@ export default {
         });
       }
     },
-    // tabs, 删除tab
+    // 顶部导航标签页：删除tab
     removeTabHandle(tabName) {
       this.mainTabs = this.mainTabs.filter(item => item.path !== tabName);
       if (this.mainTabs.length >= 1) {
@@ -157,14 +175,47 @@ export default {
         }
       }
     },
-    //获取路由并赋值给当前激活菜单
+    //获取当前路由
     getPath() {
       this.defaultActive = this.$route.path.slice(1);
+    },
+    //退出登录
+    logoutHandle() {
+      this.$confirm(`确定进行[退出]操作?`, "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(() => {
+          //token对象
+          let token = JSON.parse(sessionStorage.getItem("tokenInfo"));
+          //传给后台的token值
+          let tokenValue = token.token_type + " " + token.access_token;
+          this.axios({
+            method: "post",
+            url: "http://192.168.0.40:9900/ac/token/logout",
+            headers: { authorization: tokenValue }
+          }).then(res => {
+            if (res.data && res.data.code === 0) {
+              clearLoginInfo();
+              this.$router.push({ name: "login" });
+            }
+          });
+        })
+        .catch(() => {});
+    },
+    // 修改密码
+    updatePasswordHandle() {
+      this.updatePassowrdVisible = true;
+      this.$nextTick(() => {
+        this.$refs.updatePassowrd.init();
+      });
     }
   },
   computed: {
     ...mapState({
-      menuInfo: state => state.menuInfo
+      menuInfo: state => state.menuInfo,
+      userInfo: state => state.userInfo
     })
   }
 };
@@ -173,26 +224,7 @@ export default {
 <style>
 html,
 body,
-div,
-ul,
-li,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-p,
-dl,
-dt,
-dd,
-ol,
-form,
-input,
-textarea,
-th,
-td,
-select {
+div {
   margin: 0;
   padding: 0;
 }
