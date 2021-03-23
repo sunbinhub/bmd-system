@@ -1,7 +1,6 @@
 //引入vue
 import Vue from "vue";
 import Vuex from "vuex";
-import axios from "axios";
 
 // 注册vuex
 Vue.use(Vuex);

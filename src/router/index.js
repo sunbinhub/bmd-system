@@ -2,6 +2,7 @@ import Vue from "vue";
 import Router from "vue-router";
 import store from "../vuex/store";
 import createRoutes from "./createRoutes";
+import axios from "axios";
 
 Vue.use(Router);
 
@@ -24,7 +25,7 @@ const router = new Router({
 });
 
 //全局路由守卫
-let hasMenus = false;
+let hasMenus = false; //是否已经添加动态菜单
 router.beforeEach((to, from, next) => {
   // to: Route: 即将要进入的目标 路由对象
   // from: Route: 当前导航正要离开的路由对象
@@ -36,16 +37,39 @@ router.beforeEach((to, from, next) => {
       next();
     } else {
       try {
-        const routes = createRoutes(store.state.menuInfo);
-        // 动态添加路由
-        //router.addrroutes()已弃用，已在vue-router：4中移除 使用router.addRoute()
-        //目前是vue-router：3.0.1版本
-        router.addRoutes(routes);
-        hasMenus = true;
-        next({ path: to.path || "/PlatformRoleManagement" });
+        //获取菜单数据
+        //token对象
+        let token = JSON.parse(sessionStorage.getItem("tokenInfo") || "[]");
+        //传给后台的token值
+        let tokenValue = token.token_type + " " + token.access_token;
+        axios
+          .get("http://192.168.0.40:9900/uc/sys/menu/nav", {
+            params: { parentId: 0 },
+            headers: { authorization: tokenValue }
+          })
+          .then(res => {
+            if (res.data && res.data.code === 0) {
+              console.log("菜单数据：" + res.data.data);
+              //把当前用户菜单权限数据存入state
+              store.commit("SAVE_MENUINFO", res.data.data);
+              const routes = createRoutes(res.data.data);
+              // 动态添加路由
+              //router.addrroutes()已弃用，已在vue-router：4中移除 使用router.addRoute()
+              //目前是vue-router：3.0.1版本
+              router.addRoutes(routes);
+              hasMenus = true;
+              next({ path: to.path || "/PlatformRoleManagement" });
+            } else {
+              sessionStorage.setItem("tokenInfo", "[]");
+              next();
+            }
+          });
       } catch (err) {
-        sessionStorage.setItem("menuInfo", "[]");
-        next(`/login?redirect=${to.path}`);
+        console.log(
+          `%c${e} 请求菜单列表和权限失败，跳转至登录页！！`,
+          "color:blue"
+        );
+        router.push({ name: "login" });
       }
     }
   } else {

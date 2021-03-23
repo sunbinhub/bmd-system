@@ -102,45 +102,35 @@ export default {
                 console.log("token数据：" + res.data.username);
                 //把当前用户token数据存入state
                 _this.$store.commit("SAVE_TOKEN", res.data);
-
-                //获取菜单数据
-                let tokenValue =
-                  res.data.token_type + " " + res.data.access_token;
+                //token对象
+                let token = JSON.parse(
+                  sessionStorage.getItem("tokenInfo") || "[]"
+                );
+                //传给后台的token值
+                let tokenValue = token.token_type + " " + token.access_token;
+                //获取用户信息
                 this.axios
-                  .get("http://192.168.0.40:9900/uc/sys/menu/nav", {
-                    params: { parentId: 0 },
+                  .get("http://192.168.0.40:9900/uc/sys/user/info", {
                     headers: { authorization: tokenValue }
                   })
                   .then(res => {
                     if (!!res.data) {
-                      console.log("菜单数据：" + res.data.data);
-                      //把当前用户菜单权限数据存入state
-                      _this.$store.commit("SAVE_MENUINFO", res.data.data);
-                      //获取用户信息
-                      this.axios
-                        .get("http://192.168.0.40:9900/uc/sys/user/info", {
-                          headers: { authorization: tokenValue }
-                        })
-                        .then(res => {
-                          if (!!res.data) {
-                            console.log("用户信息：" + res.data.data.sysUser);
-                            //把当前用户信息存入state
-                            _this.$store.commit(
-                              "SAVE_USERINFO",
-                              res.data.data.sysUser
-                            );
-                            _this.$message({
-                              message: "恭喜你，登录成功！",
-                              type: "success"
-                            });
-                            // 跳转到后台首页
-                            //思考：根据网友的经验，是我路由跳转和路由拦截的 path 冲突了
-                            //解决：不影响操作，只需要把登陆按钮那里添加一个错误异常抛出就行即可: .catch(() => {})；
-                            _this.$router
-                              .push("/PlatformRoleManagement")
-                              .catch(() => {});
-                          }
-                        });
+                      console.log("用户信息：" + res.data.data.sysUser);
+                      //把当前用户信息存入state
+                      _this.$store.commit(
+                        "SAVE_USERINFO",
+                        res.data.data.sysUser
+                      );
+                      _this.$message({
+                        message: "恭喜你，登录成功！",
+                        type: "success"
+                      });
+                      // 跳转到后台首页
+                      //思考：根据网友的经验，是我路由跳转和路由拦截的 path 冲突了
+                      //解决：不影响操作，只需要把登陆按钮那里添加一个错误异常抛出就行即可: .catch(() => {})；
+                      _this.$router
+                        .push("/PlatformRoleManagement")
+                        .catch(() => {});
                     }
                   });
               }
