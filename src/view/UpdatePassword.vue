@@ -88,7 +88,7 @@ export default {
       this.$refs["dataForm"].validate(valid => {
         if (valid) {
           //token对象
-          let token = JSON.parse(sessionStorage.getItem("tokenInfo"));
+          let token = JSON.parse(sessionStorage.getItem("tokenInfo") || "[]");
           //传给后台的token值
           let tokenValue = token.token_type + " " + token.access_token;
           //报错：JSON parse error: Unrecognized token 'newPassword'

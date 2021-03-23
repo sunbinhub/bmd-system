@@ -188,7 +188,7 @@ export default {
       })
         .then(() => {
           //token对象
-          let token = JSON.parse(sessionStorage.getItem("tokenInfo"));
+          let token = JSON.parse(sessionStorage.getItem("tokenInfo") || "[]");
           //传给后台的token值
           let tokenValue = token.token_type + " " + token.access_token;
           this.axios({
