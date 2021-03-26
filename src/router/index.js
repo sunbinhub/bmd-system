@@ -20,6 +20,11 @@ const router = new Router({
       path: "/login",
       name: "login",
       component: () => import("@/view/common/login")
+    },
+    {
+      path: "/404",
+      name: "404",
+      component: () => import("@/view/common/404")
     }
   ]
 });

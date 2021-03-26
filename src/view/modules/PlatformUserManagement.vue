@@ -133,17 +133,11 @@
                 </el-table-column>
               </el-table>
               <div class="page">
-                <el-pagination
-                  @size-change="handleSizeChange"
-                  @current-change="handleCurrentChange"
-                  :current-page="paginations.page_index"
-                  :page-sizes="paginations.page_sizes"
-                  :page-size="paginations.page_size"
-                  :layout="paginations.layout"
-                  :total="paginations.total"
-                  :pager-count="paginations.pager_count"
+                <Pagination
+                  :tableData="organizationTableData"
+                  @paginationChange="setTableData"
                 >
-                </el-pagination>
+                </Pagination>
               </div>
             </template>
           </el-main>
@@ -493,8 +487,9 @@
 </template>
 <script>
 import SearchInput from "@/components/common-components/SearchInput";
+import Pagination from "@/components/common-components/Pagination";
 export default {
-  components: { SearchInput },
+  components: { SearchInput, Pagination },
   data() {
     return {
       //树形控件
@@ -611,15 +606,6 @@ export default {
       //选中的表格数据
       multipleSelection: [],
       tableHeight: "", //表格高度
-      paginations: {
-        page_index: 1, //当前页
-        total: 15, //总数
-        page_size: 1, //一页显示多少条数据
-        page_sizes: [1, 10, 15, 20], //下拉框：每页显示多少条
-        layout: "total, sizes, prev, pager, next, jumper", //组件布局，子组件名用逗号分隔
-        pager_count: 7 //页码按钮的数量，当总页数超过该值时会折叠
-      },
-      allTableData: [], //实际展示的表格数据
       dialogFormVisible: false, //弹窗是否显示
       active: 0, //步骤条
       dialogId: 1, //弹窗内默认显示内容
@@ -704,9 +690,6 @@ export default {
     };
   }, // 生命周期 - 创建完成（可以访问当前this实例）
   created() {
-    this.allTableData = this.organizationTableData;
-    this.setPaginations();
-
     window.addEventListener("resize", this.getPlatformAsideHeight); // 注册监听器
     this.getPlatformAsideHeight(); // 页面创建时先调用一次
 
@@ -738,43 +721,9 @@ export default {
       // 获取浏览器高度，减去顶部导航栏的值70（可动态获取）
       this.tableHeight = window.innerHeight - 323 + "px";
     },
-    handleSizeChange(page_size) {
-      console.log("pageSize改变时触发");
-      //pageSize改变时触发
-      this.paginations.page_index = 1; //第一页
-      this.paginations.page_size = page_size; //每页先显示多少数据
-      this.organizationTableData = this.allTableData.filter((item, index) => {
-        return index < page_size;
-      });
-    },
-    handleCurrentChange(page) {
-      // 5
-      console.log("当前页：", page, "currentPage改变时会触发");
-      //currentPage 改变时会触发
-      //获取前一页的总条数
-      let index = this.paginations.page_size * (page - 1); // 20
-      //获取总条数
-      let allData = this.paginations.page_size * page; // 25
-
-      let tablist = []; // 显示的当前页数据：20条-25条
-      for (let i = index; i < allData; i++) {
-        if (this.allTableData[i]) {
-          //如果最后只要23条数据，只显示到23条
-          tablist.push(this.allTableData[i]);
-        }
-        this.organizationTableData = tablist;
-      }
-    },
-    setPaginations() {
-      //设置分页 显示数据
-      this.paginations.total = this.allTableData.length; //数据的数量
-      this.paginations.page_index = 1; //默认显示第一页
-      this.paginations.page_size = 1; //每页显示多少数据
-
-      //显示数据
-      this.organizationTableData = this.allTableData.filter((item, index) => {
-        return index < this.paginations.page_size;
-      });
+    //设置表格数据
+    setTableData(data) {
+      this.organizationTableData = data;
     },
     next() {
       //步骤条事件:下一步

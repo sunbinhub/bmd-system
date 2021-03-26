@@ -82,7 +82,7 @@ export default {
 
           //http://192.168.0.40:9900/ac/oauth/token?username=admin&password=a1234567&grant_type=password&scope=server&code=jmcr&randomStr=123
 
-          let postTokenData = this.qs.stringify({
+          let postParams = this.qs.stringify({
             username: _this.loginForm.userName,
             password: _this.loginForm.passWord,
             grant_type: "password",
@@ -93,13 +93,11 @@ export default {
           this.axios({
             method: "post",
             url: "http://192.168.0.40:9900/ac/oauth/token",
-            data: postTokenData,
+            data: postParams,
             headers: { authorization: "Basic dGVzdDp0ZXN0" }
           })
             .then(res => {
-              if (!!res.data) {
-                //获取token数据
-                console.log("token数据：" + res.data.username);
+              if (res.data) {
                 //把当前用户token数据存入state
                 _this.$store.commit("SAVE_TOKEN", res.data);
                 //token对象
@@ -114,8 +112,7 @@ export default {
                     headers: { authorization: tokenValue }
                   })
                   .then(res => {
-                    if (!!res.data) {
-                      console.log("用户信息：" + res.data.data.sysUser);
+                    if (res.data && res.data.code === 0) {
                       //把当前用户信息存入state
                       _this.$store.commit(
                         "SAVE_USERINFO",
@@ -173,7 +170,6 @@ body,
 .el-form {
   width: 400px;
   border-radius: 4px;
-  border: 1px solid #ccc;
   padding: 0 45px 10px 10px;
 }
 .title {

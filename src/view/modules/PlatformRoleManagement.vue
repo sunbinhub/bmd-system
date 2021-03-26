@@ -8,14 +8,16 @@
     </el-header>
     <!-- 头部结束 -->
     <el-container>
-      <el-header>
+      <el-header style="pading: 0; padding-right: 10px;">
         <el-row>
           <el-button
             type="primary"
             size="mini"
+            class="fl"
             @click="dialogFormVisible = true"
-            >新建角色</el-button
           >
+            新建角色
+          </el-button>
           <SearchInput
             @searchValue="searchPlatformRole"
             placeholder="请输入角色名称/ID"
@@ -29,17 +31,24 @@
           style="width: 100%, overflow: auto;"
           :height="tableHeight"
         >
-          <el-table-column fixed prop="date" label="日期" width="150">
+          <el-table-column
+            type="index"
+            label="序号"
+            align="center"
+            sortable
+            width="100"
+          ></el-table-column>
+          <el-table-column prop="code" label="角色代码" width="150">
           </el-table-column>
-          <el-table-column prop="name" label="姓名" width="120">
+          <el-table-column prop="name" label="角色名称" width="120">
           </el-table-column>
-          <el-table-column prop="province" label="省份" width="120">
+          <el-table-column prop="remark" label="角色描述" width="120">
           </el-table-column>
-          <el-table-column prop="city" label="市区" width="120">
-          </el-table-column>
-          <el-table-column prop="address" label="地址" width="300">
-          </el-table-column>
-          <el-table-column prop="zip" label="邮编" width="120">
+          <el-table-column prop="disableFlag" label="状态" width="120">
+            <template slot-scope="scope">
+              <span v-if="scope.row.disableFlag === 0">在用</span>
+              <span v-if="scope.row.disableFlag === 1">停用</span>
+            </template>
           </el-table-column>
           <el-table-column fixed="right" label="操作" width="260">
             <template slot-scope="scope">
@@ -86,27 +95,45 @@
             </template>
           </el-table-column>
         </el-table>
-        <div>
-          <el-pagination
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-            :current-page="paginations.page_index"
-            :page-sizes="paginations.page_sizes"
-            :page-size="paginations.page_size"
-            :layout="paginations.layout"
-            :total="paginations.total"
-            :pager-count="paginations.pager_count"
-          >
-          </el-pagination>
-        </div>
+        <Pagination
+          :totalCount="totalCount"
+          @paginationChange="getlist"
+        ></Pagination>
+        <el-dialog :visible.sync="dialogVisible">
+          <div v-if="tableDialog === 1">
+            <ShowRole
+              :roleInfo="roleInfo"
+              @closeTableDialog="dialogVisible = false"
+            ></ShowRole>
+          </div>
+          <div v-if="tableDialog === 2">
+            <RoleInfo
+              :platformRoleForm="setRoleInfo"
+              @closeTableDialog="dialogVisible = false"
+              @changeRoleInfo="sendRoleInfo"
+            ></RoleInfo>
+          </div>
+          <div v-if="tableDialog === 4">
+            <TacticsSearchTable
+              :roleId="currentId"
+              @closeTableDialog="dialogVisible = false"
+              @saveMenuTree="sendMenuTree"
+            ></TacticsSearchTable>
+          </div>
+        </el-dialog>
       </el-main>
       <!-- 弹窗开始 -->
       <el-dialog :visible.sync="dialogFormVisible" style="width:1300px;">
         <el-container>
           <el-header
-            style="font-size:20px; border-bottom: 1px solid #ccc;height: 30px;"
+            style="font-size:20px; border-bottom: 1px solid #ccc;height: 40px;padding:5px 0 0 10px;"
           >
-            <i class="el-icon-back"></i>
+            <i
+              class="el-icon-back"
+              @click="dialogFormVisible = false"
+              style="cursor:pointer;margin-right:5px;"
+            >
+            </i>
             <span>角色信息</span>
           </el-header>
           <el-container>
@@ -117,241 +144,42 @@
                 simple
                 style="margin-top: 20px"
               >
-                <el-step title="步骤 1"></el-step>
-                <el-step title="步骤 2"></el-step>
-                <el-step title="步骤 3"></el-step>
-                <el-step title="步骤 4"></el-step>
+                <el-step title="填写角色信息"></el-step>
+                <el-step title="设置角色权限"></el-step>
+                <el-step title="审阅信息和权限"></el-step>
               </el-steps>
             </el-header>
             <el-main>
               <div
-                v-show="dialogId === 1 ? true : false"
+                v-if="dialogId === 1 ? true : false"
+                style="height:412px; overflow:auto;"
+              >
+                <keep-alive>
+                  <RoleInfo @submitRoleinfo="getRoleinfo"></RoleInfo>
+                </keep-alive>
+              </div>
+              <div
+                v-if="dialogId === 2 ? true : false"
                 style="height:400px; overflow:auto;"
               >
-                <el-form
-                  :model="platformRoleForm"
-                  :rules="platformRoleFormRules"
-                  ref="platformRoleForm"
-                  label-width="100px"
-                  class="demo-ruleForm"
-                >
-                  <el-form-item
-                    label="角色代码"
-                    prop="platformRoleCode"
-                    size="mini"
-                  >
-                    <el-input
-                      v-model="platformRoleForm.platformRoleCode"
-                      size="mini"
-                      style="width:200px;"
-                    ></el-input>
-                  </el-form-item>
-                  <el-form-item label="角色名称" prop="platformRoleName">
-                    <el-input
-                      v-model="platformRoleForm.platformRoleName"
-                      size="mini"
-                      style="width:200px;"
-                    ></el-input>
-                  </el-form-item>
-                  <el-form-item label="描述" size="mini">
-                    <el-input
-                      type="textarea"
-                      :rows="3"
-                      v-model="platformRoleForm.textarea"
-                      resize="none"
-                      style="width:200px;"
-                    >
-                    </el-input>
-                  </el-form-item>
-                  <el-form-item label="状态" prop="statu" size="mini">
-                    <el-radio-group v-model="platformRoleForm.statu">
-                      <el-radio :label="1">在用</el-radio>
-                      <el-radio :label="2">停用</el-radio>
-                    </el-radio-group>
-                  </el-form-item>
-                  <el-form-item size="mini">
-                    <el-button type="primary" @click="next()">
-                      下一步
-                    </el-button>
-                  </el-form-item>
-                </el-form>
+                <keep-alive>
+                  <TacticsSearchTable
+                    @setMenuTree="getMenuTree"
+                    @setLast="last"
+                  ></TacticsSearchTable>
+                </keep-alive>
               </div>
-              <div v-show="dialogId === 2 ? true : false">
-                <el-col :span="5" style="border: 1px solid #ddd;height:400px;">
-                  <div style="border-bottom: 1px solid #ccc; padding: 5px;">
-                    <el-input
-                      placeholder="输入关键字进行过滤"
-                      v-model="organizationFilterText"
-                      size="mini"
-                    >
-                    </el-input>
-                  </div>
-                  <el-tree
-                    class="filter-tree"
-                    :data="organizationData"
-                    :props="organizationDefaultProps"
-                    :filter-node-method="organizationFilterNode"
-                    highlight-current
-                    ref="organizationTree"
-                    node-key="id"
-                  >
-                    <span class="custom-tree-node" slot-scope="{ node, data }">
-                      <span>
-                        <i :class="data.icon"></i>
-                        {{ node.label }}
-                      </span>
-                    </span>
-                  </el-tree>
-                </el-col>
-                <el-col :span="1">&nbsp;</el-col>
-                <el-col :span="18" style="border: 1px solid #ddd;height:400px;">
-                  <div style="border-bottom: 1px solid #ccc; padding: 5px;">
-                    <el-input
-                      placeholder="输入关键字进行过滤"
-                      v-model="applicationPermissionFilterText"
-                      size="mini"
-                    >
-                    </el-input>
-                  </div>
-                  <el-tree
-                    :data="applicationPermissionData"
-                    show-checkbox
-                    node-key="id"
-                    ref="applicationPermissionTree"
-                    highlight-current
-                    :props="applicationPermissionDefaultProps"
-                    :filter-node-method="applicationPermissionFilterNode"
-                  >
-                  </el-tree>
-                </el-col>
-              </div>
-              <div v-show="dialogId === 3 ? true : false">
-                <el-container>
-                  <el-header style="height: 10px;font-weight:700;"
-                    >选择策略</el-header
-                  >
-                  <el-main>
-                    <template>
-                      <el-radio v-model="tactic" label="1">不设策略</el-radio>
-                      <el-radio v-model="tactic" label="2">添加策略</el-radio>
-                    </template>
-                    <div style="height:333px;">
-                      <div v-show="tactic === '2'" style="margin-top:10px;">
-                        <template>
-                          <el-row
-                            style="border: 1px solid #ccc;background: #eee;padding:0 5px;height:30px;"
-                          >
-                            <span class="fl" style="line-height:28px;">
-                              选中策略
-                            </span>
-                            <div class="fr">
-                              <el-button
-                                type="text"
-                                @click="addTactic"
-                                style="padding:0; padding-top:6px;"
-                              >
-                                新增策略
-                              </el-button>
-                              <el-button
-                                type="text"
-                                @click="removeTactic"
-                                style="padding:0;padding-top:6px;"
-                              >
-                                删除策略
-                              </el-button>
-                            </div>
-                          </el-row>
-                          <el-table
-                            ref="multipleTable"
-                            :data="organizationTableData"
-                            tooltip-effect="dark"
-                            style="width: 100%"
-                            @selection-change="handleSelectionChange"
-                            height="260px"
-                            border
-                            size="mini"
-                          >
-                            <el-table-column type="selection" width="55">
-                            </el-table-column>
-                            <el-table-column
-                              prop="name"
-                              label="序号"
-                              align="center"
-                              width="100"
-                              sortable
-                            ></el-table-column>
-                            <el-table-column label="日期" width="120">
-                              <template slot-scope="scope">{{
-                                scope.row.date
-                              }}</template>
-                            </el-table-column>
-                            <el-table-column
-                              prop="name"
-                              label="姓名"
-                              width="120"
-                            >
-                            </el-table-column>
-                            <el-table-column
-                              prop="address"
-                              label="地址"
-                              show-overflow-tooltip
-                            >
-                            </el-table-column>
-                            <el-table-column label="操作" width="130">
-                              <template slot-scope="scope">
-                                <el-button
-                                  @click="setValueClick(scope.row)"
-                                  type="text"
-                                  size="small"
-                                >
-                                  值设置
-                                </el-button>
-                                <el-button
-                                  @click="removeClick(scope.row)"
-                                  type="text"
-                                  size="small"
-                                >
-                                  删除
-                                </el-button>
-                              </template>
-                            </el-table-column>
-                          </el-table>
-                          <div>
-                            <el-pagination
-                              @size-change="handleSizeChange"
-                              @current-change="handleCurrentChange"
-                              :current-page="paginations.page_index"
-                              :page-sizes="paginations.page_sizes"
-                              :page-size="paginations.page_size"
-                              :layout="paginations.layout"
-                              :total="paginations.total"
-                              :pager-count="paginations.pager_count"
-                            >
-                            </el-pagination>
-                          </div>
-                        </template>
-                      </div>
-                    </div>
-                    <template>
-                      <el-button
-                        style="margin-top: 12px;"
-                        @click="last()"
-                        size="mini"
-                      >
-                        上一步
-                      </el-button>
-                      <el-button
-                        type="primary"
-                        style="margin-top: 12px;"
-                        @click="next()"
-                        size="mini"
-                      >
-                        下一步
-                      </el-button>
-                    </template>
-                  </el-main>
-                </el-container>
-                
+              <div
+                v-if="dialogId === 3 ? true : false"
+                style="height:400px; overflow:auto;"
+              >
+                <keep-alive>
+                  <CheckInfoAndTactics
+                    :useMenuTree="newMenuTree"
+                    @setLast="last"
+                    @newRole="submitNewRole"
+                  ></CheckInfoAndTactics>
+                </keep-alive>
               </div>
             </el-main>
           </el-container>
@@ -364,374 +192,149 @@
 
 <script>
 import SearchInput from "@/components/common-components/SearchInput";
+import TacticsSearchTable from "@/view/modules/module-component/prm/TacticsSearchTable";
+import Pagination from "@/components/common-components/Pagination";
+import RoleInfo from "@/view/modules/module-component/prm/RoleInfo";
+import CheckInfoAndTactics from "@/view/modules/module-component/prm/CheckInfoAndTactics";
+import ShowRole from "@/view/modules/module-component/prm/ShowRole";
 export default {
+  components: {
+    SearchInput,
+    TacticsSearchTable,
+    Pagination,
+    RoleInfo,
+    CheckInfoAndTactics,
+    ShowRole
+  },
   data() {
     return {
       tableData: [
         {
-          date: "2016-05-03",
-          name: "王小虎",
-          province: "上海",
-          city: "普陀区",
-          address: "上海市普陀区金沙江路 1518 弄",
-          zip: 200333
-        },
-        {
-          date: "2016-05-02",
-          name: "王小虎",
-          province: "上海",
-          city: "普陀区",
-          address: "上海市普陀区金沙江路 1518 弄",
-          zip: 200333
-        },
-        {
-          date: "2016-05-04",
-          name: "王小虎",
-          province: "上海",
-          city: "普陀区",
-          address: "上海市普陀区金沙江路 1518 弄",
-          zip: 200333
-        },
-        {
-          date: "2016-05-01",
-          name: "王小虎",
-          province: "上海",
-          city: "普陀区",
-          address: "上海市普陀区金沙江路 1518 弄",
-          zip: 200333
-        },
-        {
-          date: "2016-05-08",
-          name: "王小虎",
-          province: "上海",
-          city: "普陀区",
-          address: "上海市普陀区金沙江路 1518 弄",
-          zip: 200333
-        },
-        {
-          date: "2016-05-06",
-          name: "王小虎",
-          province: "上海",
-          city: "普陀区",
-          address: "上海市普陀区金沙江路 1518 弄",
-          zip: 200333
-        },
-        {
-          date: "2016-05-07",
-          name: "王小虎",
-          province: "上海",
-          city: "普陀区",
-          address: "上海市普陀区金沙江路 1518 弄",
-          zip: 200333
+          //其中的一条数据
+          code: "ROLE_ADMIN", //角色code
+          createdByName: "", //创建人名称
+          createdTime: null, //创建名称
+          disableFlag: 0, //0-在用，1-停用
+          id: "2", //角色ID
+          name: "管理员", //角色名称
+          remark: "管理员" //角色描述
         }
       ],
-      paginations: {
-        page_index: 1, //当前页
-        total: 15, //总数
-        page_size: 1, //一页显示多少条数据
-        page_sizes: [1, 10, 15, 20], //下拉框：每页显示多少条
-        layout: "total, sizes, prev, pager, next, jumper", //组件布局，子组件名用逗号分隔
-        pager_count: 7 //页码按钮的数量，当总页数超过该值时会折叠
-      },
-      allTableData: [],
+      total: "",
+      pageSize: "",
+      tableSizeData: {},
       tableHeight: "", //最外层表格高度
       handleOptions: "", //表格操作列
 
       //弹窗数据
-      dialogFormVisible: false, //弹窗是否显示
-      active: 0, //步骤条
-      dialogId: 3, //弹窗内默认显示内容
-      platformRoleForm: {
-        platformRoleCode: "", //角色代码
-        platformRoleName: "", //角色名称
-        statu: 1,
-        textarea: ""
-      },
-      platformRoleFormRules: {
-        platformRoleCode: [
-          { required: true, message: "请输入活动名称", trigger: "blur" },
-          { min: 3, max: 5, message: "长度在 3 到 5 个字符", trigger: "blur" }
-        ],
-        platformRoleName: [
-          { required: true, message: "请输入活动名称", trigger: "blur" },
-          { min: 3, max: 5, message: "长度在 3 到 5 个字符", trigger: "blur" }
-        ],
-        statu: [
-          { required: true, message: "请选择活动资源", trigger: "change" }
-        ]
-      },
-
-      //应用树形结构搜索
-      organizationFilterText: "",
-      //应用树形结构数据
-      organizationData: [
-        {
-          id: 1,
-          label: "一级 1",
-          icon: "el-icon-folder",
-          children: [
-            {
-              id: 4,
-              label: "二级 你好",
-              icon: "el-icon-folder",
-              children: [
-                {
-                  id: 9,
-                  label: "三级 1-1-1",
-                  icon: "el-icon-folder"
-                },
-                {
-                  id: 10,
-                  label: "三级 1-1-2",
-                  icon: "el-icon-folder"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          id: 2,
-          label: "一级 2",
-          icon: "el-icon-folder",
-          children: [
-            {
-              id: 5,
-              label: "二级 2-1",
-              icon: "el-icon-folder"
-            },
-            {
-              id: 6,
-              label: "二级 2-2",
-              icon: "el-icon-folder"
-            }
-          ]
-        },
-        {
-          id: 3,
-          label: "一级 3",
-          icon: "el-icon-folder",
-          children: [
-            {
-              id: 7,
-              label: "二级 3-1",
-              icon: "el-icon-folder"
-            },
-            {
-              id: 8,
-              label: "二级 3-2",
-              icon: "el-icon-folder"
-            }
-          ]
-        }
-      ],
-      //应用树形结构默认树形
-      organizationDefaultProps: {
-        children: "children",
-        label: "label"
-      },
-
-      //权限树形结构搜索
-      applicationPermissionFilterText: "",
-      //权限树形结构数据
-      applicationPermissionData: [
-        {
-          id: 1,
-          label: "一级 1",
-          children: [
-            {
-              id: 4,
-              label: "二级 1-1",
-              children: [
-                {
-                  id: 9,
-                  label: "三级 1-1-1"
-                },
-                {
-                  id: 10,
-                  label: "三级 1-1-2"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          id: 2,
-          label: "一级 2",
-          children: [
-            {
-              id: 5,
-              label: "二级 2-1"
-            },
-            {
-              id: 6,
-              label: "二级 2-2"
-            }
-          ]
-        },
-        {
-          id: 3,
-          label: "一级 3",
-          children: [
-            {
-              id: 7,
-              label: "二级 3-1"
-            },
-            {
-              id: 8,
-              label: "二级 3-2"
-            }
-          ]
-        }
-      ],
-      //权限树形结构默认树形
-      applicationPermissionDefaultProps: {
-        children: "children",
-        label: "label"
-      },
-      //策略选择
-      tactic: "2",
-      //组织表格数据
-      organizationTableData: [
-        {
-          date: "2016-05-03",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-02",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-04",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-01",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-08",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-06",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-07",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        }
-      ],
-      //选中的表格数据
-      multipleSelection: [],
-      paginations: {
-        page_index: 1, //当前页
-        total: 15, //总数
-        page_size: 1, //一页显示多少条数据
-        page_sizes: [1, 10, 15, 20], //下拉框：每页显示多少条
-        layout: "total, sizes, prev, pager, next, jumper", //组件布局，子组件名用逗号分隔
-        pager_count: 7 //页码按钮的数量，当总页数超过该值时会折叠
-      },
-      allTableData: [], //实际展示的表格数据
-      dialogFormVisible: false, //弹窗是否显示
-      formLabelWidth: "120px" //弹窗内部左侧的距离
+      dialogFormVisible: false, //新建弹窗是否显示
+      active: 0, //新建步骤条
+      dialogId: 1, //新建弹窗内默认显示内容
+      totalCount: null, //总共多少条数据(传给分页组件)
+      newRoleInfo: null, //新建角色信息
+      newMenuTree: null, //新建角色权限
+      roleInfo: [], //角色信息
+      dialogVisible: false, //表格内的弹窗
+      tableDialog: 1, //表格弹窗内默认显示内容
+      setRoleInfo: null, //修改用户信息
+      currentId: null //修改权限id
     };
   },
-  components: { SearchInput },
   created() {
-    this.allTableData = this.tableData;
-    this.setPaginations();
-
     window.addEventListener("resize", this.getTableHeight); // 注册监听器
     this.getTableHeight(); // 页面创建时先调用一次
-  },
-  watch: {
-    //树形结构搜索方法
-    organizationFilterText(val) {
-      this.$refs.organizationTree.filter(val);
-    },
-    //树形结构搜索方法
-    applicationPermissionFilterText(val) {
-      this.$refs.applicationPermissionTree.filter(val);
-    }
   },
   methods: {
     //搜索角色ID
     searchPlatformRole(value) {
-      console.log(value);
+      this.getlist({ condition: value, limit: 10, page: 1 });
     },
+    // 获取浏览器高度，减去顶部导航栏的值70（可动态获取）
     getTableHeight() {
-      // 获取浏览器高度，减去顶部导航栏的值70（可动态获取）
       this.tableHeight = window.innerHeight - 264 + "px";
     },
-    setPaginations() {
-      //设置分页 显示数据
-      this.paginations.total = this.allTableData.length; //数据的数量
-      this.paginations.page_index = 1; //默认显示第一页
-      this.paginations.page_size = 1; //每页显示多少数据
-
-      //显示数据
-      this.tableData = this.allTableData.filter((item, index) => {
-        return index < this.paginations.page_size;
-      });
+    //设置表格数据
+    getlist(data) {
+      //token对象
+      let token = JSON.parse(sessionStorage.getItem("tokenInfo") || "[]");
+      //传给后台的token值
+      let tokenValue = token.token_type + " " + token.access_token;
+      this.axios
+        .get("http://192.168.0.40:9900/uc/sys/role/page", {
+          params: data,
+          headers: { authorization: tokenValue }
+        })
+        .then(res => {
+          //获取表格数据，默认第一页 10条
+          if (res.data && res.data.code === 0) {
+            this.tableData = res.data.data.list; //后端返回的表格数据
+            this.totalCount = res.data.data.totalCount; // 后端返回的总条数
+          } else {
+            _this.$message.error("角色名称/ID不存在！");
+          }
+        });
     },
-    handleSizeChange(page_size) {
-      console.log("pageSize改变时触发");
-      //pageSize改变时触发
-      this.paginations.page_index = 1; //第一页
-      this.paginations.page_size = page_size; //每页先显示多少数据
-      this.tableData = this.allTableData.filter((item, index) => {
-        return index < page_size;
-      });
-    },
-    handleCurrentChange(page) {
-      // 5
-      console.log("当前页：", page, "currentPage改变时会触发");
-      //currentPage 改变时会触发
-      //获取前一页的总条数
-      let index = this.paginations.page_size * (page - 1); // 20
-      //获取总条数
-      let allData = this.paginations.page_size * page; // 25
-
-      let tablist = []; // 显示的当前页数据：20条-25条
-      for (let i = index; i < allData; i++) {
-        if (this.allTableData[i]) {
-          //如果最后只要23条数据，只显示到23条
-          tablist.push(this.allTableData[i]);
-        }
-        this.tableData = tablist;
-      }
-    },
-    //表格操作列事件
+    //查看角色信息权限
     CheckRoleClick(row) {
-      console.log(row.name);
+      this.roleInfo = [];
+      this.roleInfo.push(row);
+      this.dialogVisible = true;
+      this.tableDialog = 1;
     },
+    //修改用户信息
     changeInformationClick(row) {
-      console.log(row.name);
+      this.setRoleInfo = row;
+      this.dialogVisible = true;
+      this.tableDialog = 2;
     },
     addUserClick(row) {
       console.log(row.name);
     },
+    //修改角色权限
     setRoleLimitsClick(row) {
-      console.log(row.name);
+      this.currentId = row.id;
+      this.dialogVisible = true;
+      this.tableDialog = 4;
     },
     setRoleTacticsClick(row) {
       console.log(row.name);
     },
+    //删除角色
     removeRoleClick(row) {
-      console.log(row.name);
+      this.$confirm(`确定进行[删除角色]操作?`, "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(() => {
+          //token对象
+          let token = JSON.parse(sessionStorage.getItem("tokenInfo") || "[]");
+          //传给后台的token值
+          let tokenValue = token.token_type + " " + token.access_token;
+          this.axios({
+            method: "post",
+            url: "http://192.168.0.40:9900/uc/sys/role/delete/" + row.id,
+            headers: {
+              authorization: tokenValue
+            }
+          }).then(res => {
+            //获取表格数据，默认第一页 10条
+            if (res.data && res.data.code === 0) {
+              this.$message.success("删除角色成功！");
+              this.getlist({ limit: 10, page: 1 }); //刷新表格数据
+            } else {
+              this.$message.error(res.data.msg + "!");
+            }
+          });
+        })
+        .catch(() => {});
+      console.log(row.id);
     },
     //步骤条事件
     next() {
-      if (this.active++ > 3) {
-        this.active = 3;
-        this.dialogId = 4;
+      if (this.active++ > 2) {
+        this.active = 2;
+        this.dialogId = 3;
       } else {
         this.dialogId++;
       }
@@ -744,37 +347,97 @@ export default {
         this.dialogId--;
       }
     },
-    //树形结构事件
-    organizationFilterNode(value, organizationData) {
-      if (!value) return true;
-      return organizationData.label.indexOf(value) !== -1;
+    //新增角色信息
+    getRoleinfo(val) {
+      this.newRoleInfo = val;
+      this.next();
     },
-    //树形结构事件
-    applicationPermissionFilterNode(value, applicationPermissionData) {
-      if (!value) return true;
-      return applicationPermissionData.label.indexOf(value) !== -1;
+    //新增角色权限
+    getMenuTree(val) {
+      this.newMenuTree = val;
+      this.next();
     },
-    //策略表格事件
-    handleSelectionChange(val) {
-      this.multipleSelection = val;
+    //提交新增角色信息和权限
+    submitNewRole() {
+      //token对象
+      let token = JSON.parse(sessionStorage.getItem("tokenInfo") || "[]");
+      //传给后台的token值
+      let tokenValue = token.token_type + " " + token.access_token;
+      let postParams = this.qs.parse({
+        menuIds: this.newMenuTree,
+        role: this.newRoleInfo
+      });
+      this.axios({
+        method: "post",
+        url: "http://192.168.0.40:9900/uc/sys/role/create",
+        data: postParams,
+        headers: {
+          authorization: tokenValue,
+          "Content-Type": "application/json"
+        }
+      }).then(res => {
+        //获取表格数据，默认第一页 10条
+        if (res.data && res.data.code === 0) {
+          this.$message.success("创建成功！");
+          this.dialogFormVisible = false; //关闭弹窗
+          this.getlist({ limit: 10, page: 1 }); //刷新表格数据
+        } else {
+          this.$message.error(res.data.msg + "!");
+        }
+      });
     },
-    //策略表格修改事件
-    setValueClick(row) {
-      this.dialogFormVisible = true;
-      console.log(row);
-      //...这一行的数据赋值
+    //修改角色信息
+    sendRoleInfo(val) {
+      //token对象
+      let token = JSON.parse(sessionStorage.getItem("tokenInfo") || "[]");
+      //传给后台的token值
+      let tokenValue = token.token_type + " " + token.access_token;
+      let postParams = this.qs.parse(val);
+      this.axios({
+        method: "post",
+        url: "http://192.168.0.40:9900/uc/sys/role/update",
+        data: postParams,
+        headers: {
+          authorization: tokenValue,
+          "Content-Type": "application/json"
+        }
+      }).then(res => {
+        //获取表格数据，默认第一页 10条
+        if (res.data && res.data.code === 0) {
+          this.$message.success("修改成功！");
+          this.dialogVisible = false; //关闭弹窗
+          this.getlist({ limit: 10, page: 1 }); //刷新表格数据
+        } else {
+          this.$message.error(res.data.msg + "!");
+        }
+      });
     },
-    //策略表格删除事件
-    removeClick(row) {
-      //...删除接口
-    },
-    //策略表格头部新增策略
-    addTactic() {
-      //...
-    },
-    //策略表格头部删除策略
-    removeTactic() {
-      //...
+    //修改角色权限
+    sendMenuTree(val) {
+      //token对象
+      let token = JSON.parse(sessionStorage.getItem("tokenInfo") || "[]");
+      //传给后台的token值
+      let tokenValue = token.token_type + " " + token.access_token;
+      let postParams = this.qs.parse({
+        menuIds: val
+      });
+      this.axios({
+        method: "post",
+        url: "http://192.168.0.40:9900/uc/sys/role/create",
+        data: postParams,
+        headers: {
+          authorization: tokenValue,
+          "Content-Type": "application/json"
+        }
+      }).then(res => {
+        if (res.data && res.data.code === 0) {
+          this.$message.success("创建成功！");
+          this.dialogVisible = false; //关闭弹窗
+          this.getlist({ limit: 10, page: 1 }); //刷新表格数据
+        } else {
+          this.$message.error(res.data.msg + "!");
+        }
+      });
     }
   }
 };
@@ -797,16 +460,19 @@ export default {
 }
 #platform-role .el-dialog__body {
   padding: 0;
-  padding-left: 5px;
 }
 
-.custom-tree-node {
+#platform-role .custom-tree-node {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
   font-size: 14px;
   padding-right: 8px;
+}
+
+#platform-role .el-dialog__header {
+  padding: 0;
 }
 
 .fl {
