@@ -284,7 +284,7 @@ export default {
             this.tableData = res.data.data.list; //后端返回的表格数据
             this.totalCount = res.data.data.totalCount; // 后端返回的总条数
           } else {
-            this.$message.error("角色名称/ID不存在！");
+            this.$message.error(res.data.msg);
           }
         });
     },

@@ -15,7 +15,11 @@
         :style="platformAsideHeight"
       >
         <div style="border-bottom: 1px solid #ccc; padding: 5px;">
-          <el-input placeholder="输入关键字进行过滤" v-model="filterText">
+          <el-input
+            placeholder="输入关键字进行过滤"
+            v-model="filterText"
+            size="mini"
+          >
           </el-input>
         </div>
         <el-tree
@@ -25,6 +29,7 @@
           :filter-node-method="filterNode"
           ref="tree"
           node-key="id"
+          @node-click="nodeClick"
         >
           <span class="custom-tree-node" slot-scope="{ node, data }">
             <span>
@@ -40,53 +45,69 @@
         <el-container>
           <!-- 右侧头部开始 -->
           <el-header class="organization-header">
-            <el-row class="fr">
-              <el-select v-model="organizationStatus" size="mini">
-                <el-option label="全部" value="all"></el-option>
-                <el-option label="停用" value="disable"></el-option>
-                <el-option label="启用" value="enable"></el-option>
-              </el-select>
-              <SearchInput @searchValue="searchOrganization"></SearchInput>
-              <el-button type="info" size="mini">查询</el-button>
-              <el-button
-                type="primary"
-                @click="dialogFormVisible = true"
-                size="mini"
-              >
-                新增
-              </el-button>
+            <el-row>
+              <el-col :span="18">
+                <el-select v-model="organizationStatus" size="mini">
+                  <el-option label="全部" value=""></el-option>
+                  <el-option label="在用" value="0"></el-option>
+                  <el-option label="停用" value="1"></el-option>
+                </el-select>
+                <SearchInput @searchValue="searchOrganization"></SearchInput>
+              </el-col>
+              <el-col :span="6">
+                <el-button type="info" size="mini">查询</el-button>
+                <el-button
+                  type="primary"
+                  @click="dialogFormVisible = true"
+                  size="mini"
+                >
+                  新增
+                </el-button>
+              </el-col>
             </el-row>
           </el-header>
           <!-- 右侧头部结束 -->
           <!-- 右侧表格开始 -->
-          <el-main style="padding-bottom:0;">
+          <el-main style="padding-bottom:0;padding:0;">
             <template>
               <el-table
-                ref="multipleTable"
-                :data="organizationTableData"
-                tooltip-effect="dark"
-                style="width: 100%"
-                @selection-change="handleSelectionChange"
+                :data="tableData"
+                style="width: 100%;"
+                row-key="id"
                 :height="tableHeight"
+                @cell-click="cellClick"
+                border
+                :tree-props="{
+                  children: 'children',
+                  hasChildren: 'hasChildren'
+                }"
               >
-                <el-table-column type="selection" width="55"> </el-table-column>
                 <el-table-column
-                  prop="name"
+                  type="index"
                   label="序号"
                   align="center"
                   width="100"
                   sortable
                 ></el-table-column>
-                <el-table-column label="日期" width="120">
-                  <template slot-scope="scope">{{ scope.row.date }}</template>
+                <el-table-column prop="id" label="角色ID" width="120">
                 </el-table-column>
-                <el-table-column prop="name" label="姓名" width="120">
+                <el-table-column prop="name" label="组织名称" width="120">
                 </el-table-column>
-                <el-table-column
-                  prop="address"
-                  label="地址"
-                  show-overflow-tooltip
-                >
+                <el-table-column prop="code" label="组织代码" width="120">
+                </el-table-column>
+                <el-table-column prop="type" label="组织类型" width="120">
+                  <template slot-scope="scope">
+                    <span v-if="scope.row.type === 0">机构</span>
+                    <span v-if="scope.row.type === 1">科室</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="parentName" label="上级组织" width="120">
+                </el-table-column>
+                <el-table-column prop="disableFlag" label="状态" width="120">
+                  <template slot-scope="scope">
+                    <span v-if="scope.row.disableFlag === 0">在用</span>
+                    <span v-if="scope.row.disableFlag === 1">停用</span>
+                  </template>
                 </el-table-column>
                 <el-table-column label="操作" width="130">
                   <template slot-scope="scope">
@@ -116,8 +137,8 @@
               </el-table>
               <div class="page">
                 <Pagination
-                  :tableData="organizationTableData"
-                  @paginationChange="setTableData"
+                  :totalCount="totalCount"
+                  @paginationChange="getlist"
                 >
                 </Pagination>
               </div>
@@ -248,77 +269,20 @@
 <script>
 import SearchInput from "@/components/common-components/SearchInput";
 import Pagination from "@/components/common-components/Pagination";
+import { mapState, mapGetters } from "vuex";
+
 export default {
-  components: { SearchInput, Pagination },
+  components: { SearchInput, Pagination, mapState, mapGetters },
   data() {
     return {
       //树形控件
       filterText: "",
       //树形结构数据
-      organizationData: [
-        {
-          id: 1,
-          label: "一级 1",
-          icon: "el-icon-folder",
-          children: [
-            {
-              id: 4,
-              label: "二级 你好",
-              icon: "el-icon-folder",
-              children: [
-                {
-                  id: 9,
-                  label: "三级 1-1-1",
-                  icon: "el-icon-folder"
-                },
-                {
-                  id: 10,
-                  label: "三级 1-1-2",
-                  icon: "el-icon-folder"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          id: 2,
-          label: "一级 2",
-          icon: "el-icon-folder",
-          children: [
-            {
-              id: 5,
-              label: "二级 2-1",
-              icon: "el-icon-folder"
-            },
-            {
-              id: 6,
-              label: "二级 2-2",
-              icon: "el-icon-folder"
-            }
-          ]
-        },
-        {
-          id: 3,
-          label: "一级 3",
-          icon: "el-icon-folder",
-          children: [
-            {
-              id: 7,
-              label: "二级 3-1",
-              icon: "el-icon-folder"
-            },
-            {
-              id: 8,
-              label: "二级 3-2",
-              icon: "el-icon-folder"
-            }
-          ]
-        }
-      ],
+      organizationData: [],
       //树形结构默认树形
       defaultProps: {
         children: "children",
-        label: "label"
+        label: "name"
       },
       //左侧高度
       platformAsideHeight: {
@@ -326,43 +290,7 @@ export default {
       },
       organizationStatus: "", //组织状态
       //组织表格数据
-      organizationTableData: [
-        {
-          date: "2016-05-03",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-02",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-04",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-01",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-08",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-06",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-07",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        }
-      ],
+      tableData: [],
       //选中的表格数据
       multipleSelection: [],
       tableHeight: "", //表格高度
@@ -437,7 +365,9 @@ export default {
         dialogParentOrganizationValue: [
           { required: true, message: "请输入上级机构", trigger: "change" }
         ]
-      }
+      },
+      totalCount: null, //表格数据总条数
+      nodeClickId: null
     };
   }, // 生命周期 - 创建完成（可以访问当前this实例）
   created() {
@@ -446,34 +376,81 @@ export default {
 
     window.addEventListener("resize", this.getTableHeight); // 注册监听器
     this.getTableHeight(); // 页面创建时先调用一次
+    this.getOrganization(); //获取组织机构
   },
   watch: {
     filterText(val) {
       this.$refs.tree.filter(val);
+    },
+    organizationStatus(val) {
+      debugger;
     }
   },
   methods: {
+    //获取属性结构
+    getOrganization() {
+      this.axios
+        .get("http://192.168.0.40:9900/uc/sys/organization/tree/" + 1, {
+          //row.id
+          params: { type: "0" },
+          headers: { authorization: this.tokenValue }
+        })
+        .then(res => {
+          //获取表格数据，默认第一页 10条
+          if (res.data && res.data.code === 0) {
+            this.organizationData = res.data.data;
+          } else {
+            this.$message.error(res.data.msg);
+          }
+        });
+    },
     //设置表格数据
-    setTableData(data) {
-      this.organizationTableData = data;
+    getlist(data) {
+      this.axios
+        .get("http://192.168.0.40:9900/uc/sys/organization/page/" + 3, {
+          //this.userInfo.id
+          params: data,
+          headers: { authorization: this.tokenValue }
+        })
+        .then(res => {
+          //获取表格数据，默认第一页 10条
+          if (res.data && res.data.code === 0) {
+            let tableList = res.data.data.list;
+            tableList.forEach(item => {
+              this.deleteHasChildren(item);
+            });
+            this.tableData = tableList; //后端返回的表格数据
+            this.totalCount = res.data.data.totalCount; // 后端返回的总条数
+          } else {
+            this.$message.error(res.data.msg);
+          }
+        });
     },
     filterNode(value, data) {
       if (!value) return true;
-      return data.label.indexOf(value) !== -1;
+      return data.name.indexOf(value) !== -1;
     },
     getPlatformAsideHeight() {
       // 获取浏览器高度，减去顶部导航栏的值70（可动态获取）
       this.platformAsideHeight.height = window.innerHeight - 172 + "px";
     },
     searchOrganization(value) {
+      //这里继续开始写。。。。。。。。。搜索功能
       console.log(value);
-    },
-    handleSelectionChange(val) {
-      this.multipleSelection = val;
+      this.nodeClickId;
+      this.organizationStatus;
+      let aaa = {
+        parentId: "",
+        disableFlag: "",
+        condition: "",
+        limit: 10,
+        page: 1
+      };
+      debugger;
     },
     getTableHeight() {
       // 获取浏览器高度，减去顶部导航栏的值70（可动态获取）
-      this.tableHeight = window.innerHeight - 323 + "px";
+      this.tableHeight = window.innerHeight - 267 + "px";
     },
     //提交弹窗表单
     submitDialogForm(formName) {
@@ -502,7 +479,60 @@ export default {
       //...删除接口
     },
     //表格停用事件
-    disableClick(row) {}
+    disableClick(row) {},
+    //表格点击事件
+    cellClick(row, column, event, cell) {
+      this.axios
+        .get("http://192.168.0.40:9900/uc/sys/organization/tree/" + 1, {
+          //row.id
+          params: { type: "0" },
+          headers: { authorization: this.tokenValue }
+        })
+        .then(res => {
+          //获取表格数据，默认第一页 10条
+          if (res.data && res.data.code === 0) {
+            //删除hasChildren属性
+            let tableList = res.data.data;
+            tableList.forEach(item => {
+              this.deleteHasChildren(item);
+            });
+            //添加获取的数据
+            let tableDataCopy = this.tableData.slice(0);
+            for (let i = 0; i < tableDataCopy.length; i++) {
+              if (tableDataCopy[i].id === row.id) {
+                tableDataCopy[i].children = tableList;
+              }
+            }
+            this.tableData = tableDataCopy;
+          } else {
+            this.$message.error(res.data.msg);
+          }
+        });
+    },
+    //删除hasChildren属性
+    deleteHasChildren(item) {
+      if (item.hasChildren) {
+        delete item.hasChildren;
+        item.children.forEach(item => {
+          if (item.hasChildren) {
+            delete item.hasChildren;
+            this.deleteHasChildren(item);
+          }
+        });
+      }
+    },
+    nodeClick(row) {
+      //树形控件点击事件
+      this.nodeClickId = row.id;
+    }
+  },
+  computed: {
+    ...mapState({
+      userInfo: state => state.userInfo
+    }),
+    ...mapGetters({
+      tokenValue: "tokenValue"
+    })
   }
 };
 </script>
@@ -514,6 +544,8 @@ export default {
 }
 .organization-header {
   min-width: 630px;
+  height: 40px !important;
+  padding: 0;
 }
 
 .fr {
