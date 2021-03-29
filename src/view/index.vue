@@ -79,7 +79,7 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { mapState, mapGetters } from "vuex";
 import NavMenu from "./NavMenu";
 import clearLoginInfo from "@/router/logOff";
 import UpdatePassword from "./UpdatePassword";
@@ -187,14 +187,10 @@ export default {
         type: "warning"
       })
         .then(() => {
-          //token对象
-          let token = JSON.parse(sessionStorage.getItem("tokenInfo") || "[]");
-          //传给后台的token值
-          let tokenValue = token.token_type + " " + token.access_token;
           this.axios({
             method: "post",
             url: "http://192.168.0.40:9900/ac/token/logout",
-            headers: { authorization: tokenValue }
+            headers: { authorization: this.tokenValue }
           }).then(res => {
             if (res.data && res.data.code === 0) {
               clearLoginInfo();
@@ -216,6 +212,9 @@ export default {
     ...mapState({
       menuInfo: state => state.menuInfo,
       userInfo: state => state.userInfo
+    }),
+    ...mapGetters({
+      tokenValue: "tokenValue"
     })
   }
 };

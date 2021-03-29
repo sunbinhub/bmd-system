@@ -29,6 +29,7 @@
 
 <script>
 import clearLoginInfo from "@/router/logOff";
+import { mapGetters } from "vuex";
 export default {
   name: "UpdatePassword",
   data() {
@@ -87,10 +88,6 @@ export default {
     dataFormSubmit() {
       this.$refs["dataForm"].validate(valid => {
         if (valid) {
-          //token对象
-          let token = JSON.parse(sessionStorage.getItem("tokenInfo") || "[]");
-          //传给后台的token值
-          let tokenValue = token.token_type + " " + token.access_token;
           //报错：JSON parse error: Unrecognized token 'newPassword'
           //解决：this.qs.parse(data)将URL解析成对象的形式
           //另外一种形式：this.qs.stringify(data)将对象序列化成URL的形式，以&进行拼接
@@ -103,7 +100,7 @@ export default {
             url: "http://192.168.0.40:9900/uc/sys/user/password/update",
             data: updateData,
             headers: {
-              authorization: tokenValue,
+              authorization: this.tokenValue,
               "Content-Type": "application/json"
             }
           }).then(res => {
@@ -128,6 +125,11 @@ export default {
         }
       });
     }
+  },
+  computed: {
+    ...mapGetters({
+      tokenValue: "tokenValue"
+    })
   }
 };
 </script>

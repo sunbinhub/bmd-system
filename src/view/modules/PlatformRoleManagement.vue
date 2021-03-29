@@ -95,11 +95,14 @@
             </template>
           </el-table-column>
         </el-table>
-        <Pagination
-          :totalCount="totalCount"
-          @paginationChange="getlist"
-        ></Pagination>
-        <el-dialog :visible.sync="dialogVisible">
+        <Pagination :totalCount="totalCount" @paginationChange="getlist">
+        </Pagination>
+        <el-dialog
+          :visible.sync="dialogVisible"
+          :modal-append-to-body="false"
+          width="80%"
+          top="1vh"
+        >
           <div v-if="tableDialog === 1">
             <ShowRole
               :roleInfo="roleInfo"
@@ -113,6 +116,12 @@
               @changeRoleInfo="sendRoleInfo"
             ></RoleInfo>
           </div>
+          <div v-if="tableDialog === 3">
+            <AddUser
+              :roleId="getRoleId"
+              @close="dialogVisible = false"
+            ></AddUser>
+          </div>
           <div v-if="tableDialog === 4">
             <TacticsSearchTable
               :roleId="currentId"
@@ -123,7 +132,7 @@
         </el-dialog>
       </el-main>
       <!-- 弹窗开始 -->
-      <el-dialog :visible.sync="dialogFormVisible" style="width:1300px;">
+      <el-dialog :visible.sync="dialogFormVisible" width="80%" top="1vh">
         <el-container>
           <el-header
             style="font-size:20px; border-bottom: 1px solid #ccc;height: 40px;padding:5px 0 0 10px;"
@@ -197,6 +206,8 @@ import Pagination from "@/components/common-components/Pagination";
 import RoleInfo from "@/view/modules/module-component/prm/RoleInfo";
 import CheckInfoAndTactics from "@/view/modules/module-component/prm/CheckInfoAndTactics";
 import ShowRole from "@/view/modules/module-component/prm/ShowRole";
+import AddUser from "@/view/modules/module-component/prm/AddUser";
+import { mapGetters } from "vuex";
 export default {
   components: {
     SearchInput,
@@ -204,7 +215,8 @@ export default {
     Pagination,
     RoleInfo,
     CheckInfoAndTactics,
-    ShowRole
+    ShowRole,
+    AddUser
   },
   data() {
     return {
@@ -235,14 +247,20 @@ export default {
       newMenuTree: null, //新建角色权限
       roleInfo: [], //角色信息
       dialogVisible: false, //表格内的弹窗
-      tableDialog: 1, //表格弹窗内默认显示内容
+      tableDialog: null, //表格弹窗内默认显示内容
       setRoleInfo: null, //修改用户信息
-      currentId: null //修改权限id
+      currentId: null, //修改角色权限的id
+      getRoleId: null //新增用户的角色id
     };
   },
   created() {
     window.addEventListener("resize", this.getTableHeight); // 注册监听器
     this.getTableHeight(); // 页面创建时先调用一次
+  },
+  computed: {
+    ...mapGetters({
+      tokenValue: "tokenValue"
+    })
   },
   methods: {
     //搜索角色ID
@@ -255,14 +273,10 @@ export default {
     },
     //设置表格数据
     getlist(data) {
-      //token对象
-      let token = JSON.parse(sessionStorage.getItem("tokenInfo") || "[]");
-      //传给后台的token值
-      let tokenValue = token.token_type + " " + token.access_token;
       this.axios
         .get("http://192.168.0.40:9900/uc/sys/role/page", {
           params: data,
-          headers: { authorization: tokenValue }
+          headers: { authorization: this.tokenValue }
         })
         .then(res => {
           //获取表格数据，默认第一页 10条
@@ -270,7 +284,7 @@ export default {
             this.tableData = res.data.data.list; //后端返回的表格数据
             this.totalCount = res.data.data.totalCount; // 后端返回的总条数
           } else {
-            _this.$message.error("角色名称/ID不存在！");
+            this.$message.error("角色名称/ID不存在！");
           }
         });
     },
@@ -287,8 +301,11 @@ export default {
       this.dialogVisible = true;
       this.tableDialog = 2;
     },
+    //添加用户
     addUserClick(row) {
-      console.log(row.name);
+      this.getRoleId = row.id;
+      this.dialogVisible = true;
+      this.tableDialog = 3;
     },
     //修改角色权限
     setRoleLimitsClick(row) {
@@ -307,15 +324,11 @@ export default {
         type: "warning"
       })
         .then(() => {
-          //token对象
-          let token = JSON.parse(sessionStorage.getItem("tokenInfo") || "[]");
-          //传给后台的token值
-          let tokenValue = token.token_type + " " + token.access_token;
           this.axios({
             method: "post",
             url: "http://192.168.0.40:9900/uc/sys/role/delete/" + row.id,
             headers: {
-              authorization: tokenValue
+              authorization: this.tokenValue
             }
           }).then(res => {
             //获取表格数据，默认第一页 10条
@@ -359,10 +372,6 @@ export default {
     },
     //提交新增角色信息和权限
     submitNewRole() {
-      //token对象
-      let token = JSON.parse(sessionStorage.getItem("tokenInfo") || "[]");
-      //传给后台的token值
-      let tokenValue = token.token_type + " " + token.access_token;
       let postParams = this.qs.parse({
         menuIds: this.newMenuTree,
         role: this.newRoleInfo
@@ -372,7 +381,7 @@ export default {
         url: "http://192.168.0.40:9900/uc/sys/role/create",
         data: postParams,
         headers: {
-          authorization: tokenValue,
+          authorization: this.tokenValue,
           "Content-Type": "application/json"
         }
       }).then(res => {
@@ -388,17 +397,13 @@ export default {
     },
     //修改角色信息
     sendRoleInfo(val) {
-      //token对象
-      let token = JSON.parse(sessionStorage.getItem("tokenInfo") || "[]");
-      //传给后台的token值
-      let tokenValue = token.token_type + " " + token.access_token;
       let postParams = this.qs.parse(val);
       this.axios({
         method: "post",
         url: "http://192.168.0.40:9900/uc/sys/role/update",
         data: postParams,
         headers: {
-          authorization: tokenValue,
+          authorization: this.tokenValue,
           "Content-Type": "application/json"
         }
       }).then(res => {
@@ -414,10 +419,6 @@ export default {
     },
     //修改角色权限
     sendMenuTree(val) {
-      //token对象
-      let token = JSON.parse(sessionStorage.getItem("tokenInfo") || "[]");
-      //传给后台的token值
-      let tokenValue = token.token_type + " " + token.access_token;
       let postParams = this.qs.parse({
         menuIds: val
       });
@@ -426,7 +427,7 @@ export default {
         url: "http://192.168.0.40:9900/uc/sys/role/create",
         data: postParams,
         headers: {
-          authorization: tokenValue,
+          authorization: this.tokenValue,
           "Content-Type": "application/json"
         }
       }).then(res => {
@@ -452,12 +453,12 @@ export default {
   font-size: 12px;
 }
 
-#platform-role .el-dialog {
+/* #platform-role .el-dialog {
   margin: 0 auto;
   margin-top: 5px !important;
   width: 70%;
   height: 600px;
-}
+} */
 #platform-role .el-dialog__body {
   padding: 0;
 }

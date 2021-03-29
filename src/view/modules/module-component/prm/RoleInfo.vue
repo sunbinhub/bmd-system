@@ -48,19 +48,18 @@
           <el-button
             type="primary"
             @click="submit('platformRoleForm')"
-            style="margin-top:110px;"
+            style="margin-top:70px;"
           >
             下一步
           </el-button>
         </el-form-item>
         <el-form-item v-if="platformRoleForm.id">
-          <el-button @click="handleActive()" style="margin-top:110px;">
+          <el-button @click="handleActive()">
             取消
           </el-button>
           <el-button
             type="primary"
             @click="submit('platformRoleForm')"
-            style="margin-top:110px;"
           >
             保存
           </el-button>

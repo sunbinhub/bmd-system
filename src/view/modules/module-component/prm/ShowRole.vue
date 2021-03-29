@@ -64,6 +64,7 @@
 </template>
 
 <script>
+import { mapGetters } from "vuex";
 export default {
   name: "ShowRole",
   props: {
@@ -93,15 +94,11 @@ export default {
     //获取菜单
     getMenuTree() {
       if (this.roleInfo[0].id) {
-        //token对象
-        let token = JSON.parse(sessionStorage.getItem("tokenInfo") || "[]");
-        //传给后台的token值
-        let tokenValue = token.token_type + " " + token.access_token;
         this.axios
           .get(
             "http://192.168.0.40:9900/uc/sys/role/menu/" + this.roleInfo[0].id,
             {
-              headers: { authorization: tokenValue }
+              headers: { authorization: this.tokenValue }
             }
           )
           .then(res => {
@@ -117,6 +114,11 @@ export default {
     handleActive() {
       this.$emit("closeTableDialog", "关闭");
     }
+  },
+  computed: {
+    ...mapGetters({
+      tokenValue: "tokenValue"
+    })
   }
 };
 </script>

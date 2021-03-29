@@ -26,23 +26,19 @@ export default {
       type: String,
       default: "请输入"
     },
-    size:{
+    size: {
       type: String,
       default: "mini"
     }
   },
   data() {
     return {
-      searchValue: ""
+      searchValue: null
     };
   },
   methods: {
     searchIconClick() {
-      if (this.searchValue.indexOf(" ") < 0 && this.searchValue) {
-        this.$emit("searchValue", this.searchValue);
-      } else {
-        this.$message("输入错误！");
-      }
+      this.$emit("searchValue", this.searchValue);
     }
   }
 };
@@ -54,6 +50,6 @@ export default {
 }
 
 .search-width {
-  width: 200px;
+  max-width: 200px;
 }
 </style>

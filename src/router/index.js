@@ -43,14 +43,10 @@ router.beforeEach((to, from, next) => {
     } else {
       try {
         //获取菜单数据
-        //token对象
-        let token = JSON.parse(sessionStorage.getItem("tokenInfo") || "[]");
-        //传给后台的token值
-        let tokenValue = token.token_type + " " + token.access_token;
         axios
           .get("http://192.168.0.40:9900/uc/sys/menu/nav", {
             params: { parentId: 0 },
-            headers: { authorization: tokenValue }
+            headers: { authorization: store.getters.tokenValue }
           })
           .then(res => {
             if (res.data && res.data.code === 0) {

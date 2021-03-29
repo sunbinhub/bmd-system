@@ -25,7 +25,6 @@ const state = {
   userInfo: JSON.parse(sessionStorage.getItem("userInfo") || "[]"), //用户信息
   mainTabs: [], //顶层导航蓝标签页数据
   mainTabsActiveName: "" //当前激活的顶层导航栏
-  // userList: []
 };
 
 // mutations 主要用来操作 state
@@ -55,11 +54,6 @@ const mutations = {
   updateMainTabsActiveName(state, name) {
     state.mainTabsActiveName = name;
   }
-
-  // 获取全局的用户数据
-  // GET_USERLIST(state, userList) {
-  //   state.userList = userList;
-  // }
 };
 
 // 定义action 异步的 主要是 commit mutations 由mutations来改变状态
@@ -76,7 +70,9 @@ const actions = {
 };
 // 定义全局共享属性 getters
 const getters = {
-  // vipUsers: state => state.userList.filter(v => v.age > 9)
+  //后端需要的token值
+  tokenValue: state =>
+    state.tokenInfo.token_type + " " + state.tokenInfo.access_token
 };
 // 创建store仓库暴露出去
 export default new Vuex.Store({

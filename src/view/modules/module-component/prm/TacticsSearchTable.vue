@@ -26,7 +26,7 @@
           :filter-node-method="filterNode"
           ref="tree"
           @check-change="handleCheckChange"
-          :default-expanded-keys="defaultExpanded"
+          :default-expanded-keys="defaultChecked"
           :default-checked-keys="defaultChecked"
         >
         </el-tree>
@@ -61,8 +61,8 @@
     </el-footer>
   </el-container>
 </template>
-
 <script>
+import { mapGetters } from "vuex";
 export default {
   name: "TacticsSearchTable",
   props: {
@@ -71,52 +71,13 @@ export default {
   data() {
     return {
       filterText: "",
-      data: [
-        {
-          id: 1,
-          label: "一级 2",
-          children: [
-            {
-              id: 3,
-              label: "二级 2-1",
-              children: [
-                {
-                  id: 4,
-                  label: "三级 3-1-1"
-                },
-                {
-                  id: 5,
-                  label: "三级 3-1-2",
-                  disabled: true
-                }
-              ]
-            },
-            {
-              id: 2,
-              label: "二级 2-2",
-              disabled: true,
-              children: [
-                {
-                  id: 6,
-                  label: "三级 3-2-1"
-                },
-                {
-                  id: 7,
-                  label: "三级 3-2-2",
-                  disabled: true
-                }
-              ]
-            }
-          ]
-        }
-      ],
+      data: [],
       defaultProps: {
         children: "children",
         label: "name"
       },
       menuIds: null,
-      defaultChecked: [], //默认选中的树形节点
-      defaultExpanded: []
+      defaultChecked: [] //默认选中的树形节点
     };
   },
   created() {
@@ -133,14 +94,10 @@ export default {
   methods: {
     //获取菜单
     getMenuTree() {
-      //token对象
-      let token = JSON.parse(sessionStorage.getItem("tokenInfo") || "[]");
-      //传给后台的token值
-      let tokenValue = token.token_type + " " + token.access_token;
       this.axios
         .get("http://192.168.0.40:9900/uc/sys/menu/tree", {
           params: { parentId: 0 },
-          headers: { authorization: tokenValue }
+          headers: { authorization: this.tokenValue }
         })
         .then(res => {
           //获取菜单构建树
@@ -151,19 +108,14 @@ export default {
           }
         });
       if (this.roleId) {
-        //token对象
-        let token = JSON.parse(sessionStorage.getItem("tokenInfo") || "[]");
-        //传给后台的token值
-        let tokenValue = token.token_type + " " + token.access_token;
         this.axios
           .get("http://192.168.0.40:9900/uc/sys/role/getMenu/" + this.roleId, {
-            headers: { authorization: tokenValue }
+            headers: { authorization: this.tokenValue }
           })
           .then(res => {
             //获取菜单构建树
             if (res.data && res.data.code === 0) {
               this.defaultChecked = res.data.data;
-              this.defaultExpanded = res.data.data;
             } else {
               this.$message.error(res.msg);
             }
@@ -209,6 +161,11 @@ export default {
         this.$emit("setMenuTree", this.menuIds);
       }
     }
+  },
+  computed: {
+    ...mapGetters({
+      tokenValue: "tokenValue"
+    })
   }
 };
 </script>

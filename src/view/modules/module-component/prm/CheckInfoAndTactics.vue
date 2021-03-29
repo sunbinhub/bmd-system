@@ -65,6 +65,7 @@
 </template>
 
 <script>
+import { mapGetters } from "vuex";
 export default {
   name: "CheckInfoAndTactics",
   props: {
@@ -95,14 +96,10 @@ export default {
   methods: {
     //获取菜单
     getMenuTree() {
-      //token对象
-      let token = JSON.parse(sessionStorage.getItem("tokenInfo") || "[]");
-      //传给后台的token值
-      let tokenValue = token.token_type + " " + token.access_token;
       this.axios
         .get("http://192.168.0.40:9900/uc/sys/menu/tree", {
           params: { parentId: 0 },
-          headers: { authorization: tokenValue }
+          headers: { authorization: this.tokenValue }
         })
         .then(res => {
           //获取菜单构建树
@@ -119,6 +116,11 @@ export default {
     handleActive() {
       this.$emit("newRole", "提交");
     }
+  },
+  computed: {
+    ...mapGetters({
+      tokenValue: "tokenValue"
+    })
   }
 };
 </script>

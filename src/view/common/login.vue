@@ -100,12 +100,9 @@ export default {
               if (res.data) {
                 //把当前用户token数据存入state
                 _this.$store.commit("SAVE_TOKEN", res.data);
-                //token对象
-                let token = JSON.parse(
-                  sessionStorage.getItem("tokenInfo") || "[]"
-                );
                 //传给后台的token值
-                let tokenValue = token.token_type + " " + token.access_token;
+                let tokenValue =
+                  res.data.token_type + " " + res.data.access_token;
                 //获取用户信息
                 this.axios
                   .get("http://192.168.0.40:9900/uc/sys/user/info", {
