@@ -52,6 +52,7 @@
         >
           <AddUserDialog
             :userIds="userIds"
+            :roleId="roleId"
             @close="dialogVisible = false"
             @addUsers="addTableData"
           ></AddUserDialog>
@@ -148,7 +149,8 @@ export default {
     //获取科室数据
     getDepartment(val) {
       this.axios
-        .get("http://192.168.0.40:9900/uc/sys/organization/page/" + 11, {
+        .get("http://192.168.0.40:9900/uc/sys/organization/page/" + val, {
+          // 11有数据
           params: {
             limit: 99999,
             page: 1
@@ -192,7 +194,20 @@ export default {
       this.getTableData({ roleId: this.cascaderVal, condition: val });
     },
     //删除用户
-    deleteUser() {},
+    deleteUser() {
+      let selections = this.multipleSelection; //选中的数据
+      let selectionsLength = selections.length; //选中数据长度
+      let delData = this.tableData.slice(0); //原来的表格数据 - slice截取数组中的一项(深拷贝)
+      //删除用户
+      for (let i = delData.length - 1; i >= 0; i--) {
+        for (let j = 0; j < selectionsLength; j++) {
+          if (delData[i].id === selections[j].id) {
+            delData.splice(i, 1); //splice删除数组中的一项
+          }
+        }
+      }
+      this.tableData = delData; //删除后的数据
+    },
     //表格选择事件
     handleSelectionChange(val) {
       this.multipleSelection = val;
@@ -229,39 +244,33 @@ export default {
     },
     //保存用户数据
     save() {
+      let userId = []; //表格内用户id
+      this.tableData.forEach(item => {
+        userId.push(item.id);
+      });
       //调接口
-      let fafa = {
-        appIdList: null,
-        avatar: "",
-        createdById: "0",
-        createdByName: "",
-        createdTime: "2021-02-24 17:39:51",
-        deleted: "0",
-        departmentName: "内科",
-        disableFlag: 0,
-        id: "1",
-        lockFlag: 0,
-        organizationId: "12",
-        organizationName: null,
-        phone: "17034642999",
-        realName: null,
-        remark: null,
-        type: 9,
-        username: "admin"
-      };
-
-      let dadas = {
-        appIds: [],
-        avatar: "",
-        disableFlag: 0,
-        id: 0,
-        organizationId: 0,
-        phone: "",
-        realName: "",
-        remark: "",
-        type: 0,
-        username: ""
-      };
+      let postParams = this.qs.parse({
+        roleIds: [this.roleId],
+        userIds: userId
+      });
+      this.axios({
+        method: "post",
+        url: "http://192.168.0.40:9900/uc/sys/role/user/setting",
+        data: postParams,
+        headers: {
+          authorization: this.tokenValue,
+          "Content-Type": "application/json"
+        }
+      }).then(res => {
+        //获取表格数据，默认第一页 10条
+        if (res.data && res.data.code === 0) {
+          this.$message.success("保存成功！");
+          this.dialogFormVisible = false; //关闭弹窗
+          this.getlist({ limit: 10, page: 1 }); //刷新表格数据
+        } else {
+          this.$message.error(res.data.msg + "!");
+        }
+      });
     },
     //获取用户ids
     getUserIds(data) {

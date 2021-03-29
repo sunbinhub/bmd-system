@@ -86,6 +86,9 @@ export default {
   props: {
     userIds: {
       type: Array
+    },
+    roleId: {
+      type: String
     }
   },
   data() {
@@ -111,14 +114,14 @@ export default {
     //获取科室数据
     this.getDepartment(this.roleId);
     //获取用户数据
-    this.getTableData({ roleId: this.roleId });
+    this.getTableData();
   },
   watch: {
     userIds() {
       //获取科室数据
       this.getDepartment(this.roleId);
       //获取用户数据
-      this.getTableData({ roleId: this.roleId });
+      this.getTableData();
     }
   },
   computed: {
@@ -136,9 +139,18 @@ export default {
         })
         .then(res => {
           if (res.data && res.data.code === 0) {
-              //这里继续：剔除掉原来的用户信息
-            this.tableData = res.data.data.list; //科室数据
-            this.totalCount = res.data.data.totalCount - userIds.length;
+            let resData = res.data.data.list.slice(0); //所有的用户 - slice截取数组中的一项(深拷贝)
+            let userIdsLehgtn = this.userIds.length; //已有的用户
+            //去除角色下已有用户的数据
+            for (let i = resData.length - 1; i >= 0; i--) {
+              for (let j = 0; j < userIdsLehgtn; j++) {
+                if (resData[i].id === this.userIds[j]) {
+                  resData.splice(i, 1); //splice删除数组中的一项
+                }
+              }
+            }
+            this.tableData = resData;
+            this.totalCount = res.data.data.totalCount - this.userIds.length; //所有用户数量 - 角色下已有用户数量
           } else {
             this.$message.error(res.data.msg);
           }
@@ -147,7 +159,8 @@ export default {
     //获取科室数据
     getDepartment(val) {
       this.axios
-        .get("http://192.168.0.40:9900/uc/sys/organization/page/" + 11, {
+        .get("http://192.168.0.40:9900/uc/sys/organization/page/" + val, {
+          //11有数据
           params: {
             limit: 99999,
             page: 1
